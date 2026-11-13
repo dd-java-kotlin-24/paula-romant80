@@ -13,6 +13,12 @@ reacts with spoken affirmations when you complete tasks or maintain a daily stre
 grounded organizer that makes staying on top of daily life feel personal and uplifting.
 
 
+## Documents & Specifications
+
+* [**P.A.U.L.A. Master Implementation Plan & Academic Audit (PDF)**](docs/pdf/PAULA_Master_Plan.pdf)
+* [**Database ERD Specification (PDF)**](docs/pdf/PAULA_ERD_Specification.pdf)
+* [**Consumer Guide & Flow Overview (PDF)**](docs/pdf/PAULA_Simple_Guide.pdf)
+
 ## Credits, copyrights, and license information
 
 

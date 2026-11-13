@@ -7,6 +7,10 @@ order: 0
 {% include ddc-abbreviations.md %}
 
 ## Page contents
+{:.no_toc}
+
+- ToC
+{:toc}
 
 
 ## Summary
@@ -145,5 +149,17 @@ and complete privacy:
    Allow users to export and import an encrypted backup
    file of their tasks, streaks, and photos to phone
    storage for safekeeping.
+
+## Documents
+
+* [**P.A.U.L.A. Master Implementation Plan & Academic Criteria Audit (PDF)**](pdf/PAULA_Master_Plan.pdf)  
+  A 2-page master roadmap detailing the 4-sprint milestone execution matrix, 5-stage technical build plan, MVVM architecture, and full compliance verification against Nick Bennett's 5 Core Technical Pillars and academic rubrics.
+
+* [**Database Entity-Relationship Diagram (ERD) Specification (PDF)**](pdf/PAULA_ERD_Specification.pdf)  
+  A technical Crow's Foot ERD specification detailing all 5 Room SQLite entities (`Category`, `Task`, `Routine`, `RoutineLog`, `VoicePrompt`), column data types, foreign keys, cascade rules, and Mermaid diagram definition.
+
+* [**Consumer Guide & System Flow Overview (PDF)**](pdf/PAULA_Simple_Guide.pdf)  
+  A 1-page visual overview detailing user stories, user interaction flows, offline-first persistence, and Paula's voice encouragement trigger system.
+
 
 
