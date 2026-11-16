@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_routines">
+
+    <fragment
+        android:id="@+id/nav_routines"
+        android:name="edu.cnm.deepdive.paula.controller.RoutineFragment"
+        android:label="@string/title_routines"
+        tools:layout="@layout/fragment_routine" />
+
+    <fragment
+        android:id="@+id/nav_tasks"
+        android:name="edu.cnm.deepdive.paula.controller.TaskFragment"
+        android:label="@string/title_tasks"
+        tools:layout="@layout/fragment_task" />
+
+    <fragment
+        android:id="@+id/nav_voice_prompts"
+        android:name="edu.cnm.deepdive.paula.controller.VoicePromptFragment"
+        android:label="@string/title_voice_prompts"
+        tools:layout="@layout/fragment_voice_prompt" />
+
+</navigation>

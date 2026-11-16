@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App Name shown on phone home screen -->
+    <!-- App Name shown on phone home screen & Header -->
     <string name="app_name">P.A.U.L.A.</string>
+    <string name="app_tagline">Plan, Act, Uplift: Life Achieved</string>
 
     <!-- Bottom Navigation Bar Tab Names -->
     <string name="title_routines">Routines</string>
