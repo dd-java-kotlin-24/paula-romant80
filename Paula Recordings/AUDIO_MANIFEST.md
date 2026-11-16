@@ -1,19 +1,19 @@
-# P.A.U.L.A. Audio Assets Manifest (Universal Studio Edition)
+# P.A.U.L.A. Audio Assets Manifest (Universal Edition)
 
-**Voice ID:** 19qRSgoL646ZAbLoNdEi  
-**Synthesis & Audio Engineering:** Studio Remastered (EBU R128 -16 LUFS, 450Hz Notch, 3.2kHz Vocal Presence, 11kHz Air)  
+**Audio Pipeline:** ElevenLabs Generative Voice Clone + Studio Denoising & Normalization (EBU R128 -16 LUFS)  
 **Audience:** Universal (Name-agnostic for any user, family member, or grading evaluation)  
 **Dedicated In Loving Memory Of:** Paula Elizabeth Kleczka  
+**Android Staging Directory:** `app/src/main/res/raw/`
 
-| Filename | Spoken Audio Line / Transcript | Source | Trigger Event |
-| :--- | :--- | :--- | :--- |
-| `paula_morning.mp3` | *"Good morning! Let's get today started."* | Studio Remastered (Universal) | App Launch / Morning |
-| `paula_blankets.mp3` | *"Don't forget to fold the blankets today."* | Studio Remastered (Universal) | Routine: Blankets |
-| `paula_tidy_space.mp3` | *"Let's keep our living space nice and neat."* | Studio Remastered (Universal) | Routine: Tidy Space |
-| `paula_task_checked.mp3` | *"Awesome job checking that off."* | Studio Remastered (Universal) | Task Checked |
-| `paula_all_done.mp3` | *"Look at that! Everything is done. Proud of you."* | Studio Remastered (Universal) | Daily Chores Complete |
-| `paula_streak.mp3` | *"You're on a roll! Keep that streak going."* | Studio Remastered (Universal) | Habit Streak Milestone |
-| `paula_goodnight.mp3` | *"Time to relax and wind down. Goodnight!"* | Studio Remastered (Universal) | Quiet Hours / Evening |
-| `paula_hes_so_cute.mp3` | *"Aww, he's so cute!"* (Authentic laugh) | Real Paula (2013 Restored) | Milestone Celebration |
-| `paula_authentic_master.mp3` | Full Restored 2013 Voice Moments (19.6s) | Real Paula (2013 Restored) | Memorial Archive |
-
+| Android Resource Name | Spoken Audio Line / Transcript | Duration | Trigger Event | Type |
+| :--- | :--- | :---: | :--- | :--- |
+| `paula_good_morning.mp3` | *"Good morning. What should we get started on today?"* | 2.9s | App Launch / Morning Routine | Universal Voice Clone |
+| `paula_ready_when_you_are.mp3` | *"Ready when you are. Let's tackle this together."* | 3.2s | Starting Any Routine Checklist | Universal Voice Clone |
+| `paula_one_step_at_a_time.mp3` | *"One step at a time. You're doing great."* | 3.1s | Mid-Routine Encouragement | Universal Voice Clone |
+| `paula_awesome_job.mp3` | *"Awesome job checking that off."* | 2.3s | Single Task Checkbox | Universal Voice Clone |
+| `paula_clear_space.mp3` | *"A clear space gives you a clear mind."* | 3.1s | Tidy Room / Workspace | Universal Voice Clone |
+| `paula_nice_and_neat.mp3` | *"Let's keep our living space nice and neat."* | 2.9s | Household Routine | Universal Voice Clone |
+| `paula_proud_of_you.mp3` | *"Look at that. Everything is done. So proud of you."* | 4.4s | All Daily Routines Completed | Universal Voice Clone |
+| `paula_on_a_roll.mp3` | *"You're on a roll. Keep that streak going."* | 2.9s | Habit Streak Milestone | Universal Voice Clone |
+| `paula_goodnight.mp3` | *"Time to relax and wind down. Good night!"* | 3.2s | Quiet Hours / Evening Routine | Universal Voice Clone |
+| `paula_hes_so_cute.mp3` | *"Aww, he's so cute!"* (Authentic laugh) | 1.8s | Milestone Easter Egg | Authentic 2013 Restored |
