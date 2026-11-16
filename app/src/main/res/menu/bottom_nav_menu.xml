@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_routines"
+        android:icon="@drawable/ic_routines"
+        android:title="@string/title_routines" />
+
+    <item
+        android:id="@+id/nav_tasks"
+        android:icon="@drawable/ic_tasks"
+        android:title="@string/title_tasks" />
+
+    <item
+        android:id="@+id/nav_voice_prompts"
+        android:icon="@drawable/ic_voice_prompts"
+        android:title="@string/title_voice_prompts" />
+
+</menu>

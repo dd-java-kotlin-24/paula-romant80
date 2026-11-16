@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name shown on phone home screen -->
+    <string name="app_name">P.A.U.L.A.</string>
+
+    <!-- Bottom Navigation Bar Tab Names -->
+    <string name="title_routines">Routines</string>
+    <string name="title_tasks">Tasks</string>
+    <string name="title_voice_prompts">Paula</string>
+
+    <!-- Screen Headers -->
+    <string name="header_routines">Daily Routines</string>
+    <string name="header_tasks">Task Manager</string>
+    <string name="header_voice_prompts">Paula\'s Voice &amp; Guidance</string>
+</resources>
