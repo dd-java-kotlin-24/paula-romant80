@@ -9,6 +9,13 @@
     <string name="title_tasks">Tasks</string>
     <string name="title_voice_prompts">Paula</string>
 
+    <!-- Non-top-level Destination Titles -->
+    <string name="title_task_edit">Edit Task</string>
+    <string name="title_settings">Settings</string>
+
+    <!-- Content Descriptions -->
+    <string name="add_task">Add task</string>
+
     <!-- Screen Headers -->
     <string name="header_routines">Daily Routines</string>
     <string name="header_tasks">Task Manager</string>

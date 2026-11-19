@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import dagger.hilt.android.AndroidEntryPoint
@@ -43,5 +45,13 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
         binding.bottomNavigation.setupWithNavController(navController)
+        val appBarConfiguration = AppBarConfiguration(
+            setOf(R.id.nav_routines, R.id.nav_tasks, R.id.nav_voice_prompts)
+        )
+        binding.toolbar.setupWithNavController(navController, appBarConfiguration)
+        binding.toolbar.inflateMenu(R.menu.main_options)
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            NavigationUI.onNavDestinationSelected(item, navController)
+        }
     }
 }
