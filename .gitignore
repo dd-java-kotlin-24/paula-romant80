@@ -111,3 +111,8 @@ db/
 ### macOS ###
 
 .DS_Store
+
+
+### Local-only files ###
+
+PAULA_Avatar_Demo.html
