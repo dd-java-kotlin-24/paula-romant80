@@ -20,4 +20,15 @@
     <string name="header_routines">Daily Routines</string>
     <string name="header_tasks">Task Manager</string>
     <string name="header_voice_prompts">Paula\'s Voice &amp; Guidance</string>
+
+    <!-- Companion Screen Strings -->
+    <string name="prompt_default_greeting">\"Good morning! What should we get started on today?\"</string>
+    <string name="prompt_audio_subtitle">Spoken voice affirmation • Tap to hear Paula</string>
+    <string name="streak_banner_title">5-Day Habit Streak!</string>
+    <string name="streak_banner_subtitle">Routines completed today • Nice and neat</string>
+    <string name="action_play_greeting">Play Voice</string>
+    <string name="action_watch_tutorial">Tutorial</string>
+    <string name="avatar_content_description">Paula\'s 2D Companion Avatar</string>
+    <string name="quote_icon_content_description">Speech quote icon</string>
+    <string name="streak_icon_content_description">Streak progress icon</string>
 </resources>
