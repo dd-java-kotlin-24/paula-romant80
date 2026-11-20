@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="avatar_outfit_entries">
+        <item>Classic Red Polo</item>
+        <item>Casual Striped</item>
+        <item>Warm Sweater</item>
+        <item>Summer Casual</item>
+    </string-array>
+
+    <string-array name="avatar_outfit_values">
+        <item>classic</item>
+        <item>striped</item>
+        <item>sweater</item>
+        <item>summer</item>
+    </string-array>
+</resources>

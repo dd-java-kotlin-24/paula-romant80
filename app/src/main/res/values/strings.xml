@@ -31,4 +31,19 @@
     <string name="avatar_content_description">Paula\'s 2D Companion Avatar</string>
     <string name="quote_icon_content_description">Speech quote icon</string>
     <string name="streak_icon_content_description">Streak progress icon</string>
+
+    <!-- Settings Screen Strings -->
+    <string name="pref_category_voice">Voice &amp; Companion</string>
+    <string name="pref_voice_title">Voice Affirmations</string>
+    <string name="pref_voice_summary">Play Paula\'s spoken affirmations and audio guidance</string>
+    <string name="pref_captions_title">Speech Captions</string>
+    <string name="pref_captions_summary">Show on-screen text captions when Paula speaks</string>
+    <string name="pref_outfit_title">Paula\'s Outfit</string>
+    <string name="pref_outfit_summary">Customize Paula\'s companion wardrobe</string>
+
+    <string name="pref_category_reminders">Reminders &amp; Schedule</string>
+    <string name="pref_reminders_title">Habit Notifications</string>
+    <string name="pref_reminders_summary">Receive scheduled notifications for daily routines</string>
+    <string name="pref_quiet_hours_title">Quiet Hours (10 PM – 7 AM)</string>
+    <string name="pref_quiet_hours_summary">Silence audio voice prompts during rest hours</string>
 </resources>
