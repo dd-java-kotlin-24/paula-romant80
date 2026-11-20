@@ -27,11 +27,20 @@ interface TaskDao {
     @Query("SELECT * FROM task ORDER BY is_completed ASC, due_date ASC, priority DESC")
     fun selectAll(): Flow<List<Task>>
 
+    @Query("SELECT * FROM task WHERE user_id = :userId ORDER BY is_completed ASC, due_date ASC, priority DESC")
+    fun selectByUser(userId: Long): Flow<List<Task>>
+
     @Query("SELECT * FROM task WHERE is_completed = 0 ORDER BY due_date ASC, priority DESC")
     fun selectPending(): Flow<List<Task>>
 
+    @Query("SELECT * FROM task WHERE user_id = :userId AND is_completed = 0 ORDER BY due_date ASC, priority DESC")
+    fun selectPendingByUser(userId: Long): Flow<List<Task>>
+
     @Query("SELECT * FROM task WHERE is_completed = 1 ORDER BY completed_at DESC")
     fun selectCompleted(): Flow<List<Task>>
+
+    @Query("SELECT * FROM task WHERE user_id = :userId AND is_completed = 1 ORDER BY completed_at DESC")
+    fun selectCompletedByUser(userId: Long): Flow<List<Task>>
 
     @Query("SELECT * FROM task WHERE category_id = :categoryId ORDER BY is_completed ASC, due_date ASC")
     fun selectByCategory(categoryId: Long): Flow<List<Task>>

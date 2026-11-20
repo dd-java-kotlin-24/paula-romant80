@@ -27,8 +27,14 @@ interface RoutineDao {
     @Query("SELECT * FROM routine ORDER BY name ASC")
     fun selectAll(): Flow<List<Routine>>
 
+    @Query("SELECT * FROM routine WHERE user_id = :userId ORDER BY name ASC")
+    fun selectByUser(userId: Long): Flow<List<Routine>>
+
     @Query("SELECT * FROM routine WHERE is_active = 1 ORDER BY name ASC")
     fun selectActive(): Flow<List<Routine>>
+
+    @Query("SELECT * FROM routine WHERE user_id = :userId AND is_active = 1 ORDER BY name ASC")
+    fun selectActiveByUser(userId: Long): Flow<List<Routine>>
 
     @Query("SELECT * FROM routine WHERE routine_id = :routineId")
     fun select(routineId: Long): Flow<Routine?>

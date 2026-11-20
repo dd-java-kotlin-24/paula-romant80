@@ -2,8 +2,55 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "9ead4e13d9c4699486b2b8289614d862",
+    "identityHash": "fbfa98e6c163cb7a8bb890cdc490bb2a",
     "entities": [
+      {
+        "tableName": "user_profile",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `oauth_key` TEXT NOT NULL, `display_name` TEXT NOT NULL, `created_at` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "user_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "oauthKey",
+            "columnName": "oauth_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "display_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "user_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_user_profile_oauth_key",
+            "unique": true,
+            "columnNames": [
+              "oauth_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_user_profile_oauth_key` ON `${TABLE_NAME}` (`oauth_key`)"
+          }
+        ]
+      },
       {
         "tableName": "category",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`category_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `color_hex` TEXT NOT NULL, `icon_name` TEXT)",
@@ -116,11 +163,17 @@
       },
       {
         "tableName": "task",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`task_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `category_id` INTEGER, `voice_prompt_id` INTEGER, `title` TEXT NOT NULL, `notes` TEXT, `created_at` INTEGER NOT NULL, `due_date` INTEGER, `priority` INTEGER NOT NULL, `is_completed` INTEGER NOT NULL, `completed_at` INTEGER, `photo_uri` TEXT, `tutorial_url` TEXT, FOREIGN KEY(`category_id`) REFERENCES `category`(`category_id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`voice_prompt_id`) REFERENCES `voice_prompt`(`prompt_id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`task_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `user_id` INTEGER NOT NULL, `category_id` INTEGER, `voice_prompt_id` INTEGER, `title` TEXT NOT NULL, `notes` TEXT, `created_at` INTEGER NOT NULL, `due_date` INTEGER, `priority` INTEGER NOT NULL, `is_completed` INTEGER NOT NULL, `completed_at` INTEGER, `photo_uri` TEXT, `tutorial_url` TEXT, FOREIGN KEY(`user_id`) REFERENCES `user_profile`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`category_id`) REFERENCES `category`(`category_id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`voice_prompt_id`) REFERENCES `voice_prompt`(`prompt_id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "task_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -192,6 +245,15 @@
         },
         "indices": [
           {
+            "name": "index_task_user_id",
+            "unique": false,
+            "columnNames": [
+              "user_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_task_user_id` ON `${TABLE_NAME}` (`user_id`)"
+          },
+          {
             "name": "index_task_category_id",
             "unique": false,
             "columnNames": [
@@ -222,6 +284,17 @@
         ],
         "foreignKeys": [
           {
+            "table": "user_profile",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "user_id"
+            ],
+            "referencedColumns": [
+              "user_id"
+            ]
+          },
+          {
             "table": "category",
             "onDelete": "SET NULL",
             "onUpdate": "NO ACTION",
@@ -247,11 +320,17 @@
       },
       {
         "tableName": "routine",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`routine_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `category_id` INTEGER, `voice_prompt_id` INTEGER, `name` TEXT NOT NULL, `description` TEXT, `frequency` TEXT NOT NULL, `reminder_time` TEXT, `current_streak` INTEGER NOT NULL, `best_streak` INTEGER NOT NULL, `is_active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `last_completed_date` INTEGER, FOREIGN KEY(`category_id`) REFERENCES `category`(`category_id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`voice_prompt_id`) REFERENCES `voice_prompt`(`prompt_id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`routine_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `user_id` INTEGER NOT NULL, `category_id` INTEGER, `voice_prompt_id` INTEGER, `name` TEXT NOT NULL, `description` TEXT, `frequency` TEXT NOT NULL, `reminder_time` TEXT, `current_streak` INTEGER NOT NULL, `best_streak` INTEGER NOT NULL, `is_active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `last_completed_date` INTEGER, FOREIGN KEY(`user_id`) REFERENCES `user_profile`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`category_id`) REFERENCES `category`(`category_id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`voice_prompt_id`) REFERENCES `voice_prompt`(`prompt_id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "routine_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -325,6 +404,15 @@
         },
         "indices": [
           {
+            "name": "index_routine_user_id",
+            "unique": false,
+            "columnNames": [
+              "user_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_routine_user_id` ON `${TABLE_NAME}` (`user_id`)"
+          },
+          {
             "name": "index_routine_category_id",
             "unique": false,
             "columnNames": [
@@ -344,6 +432,17 @@
           }
         ],
         "foreignKeys": [
+          {
+            "table": "user_profile",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "user_id"
+            ],
+            "referencedColumns": [
+              "user_id"
+            ]
+          },
           {
             "table": "category",
             "onDelete": "SET NULL",
@@ -442,7 +541,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9ead4e13d9c4699486b2b8289614d862')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fbfa98e6c163cb7a8bb890cdc490bb2a')"
     ]
   }
 }

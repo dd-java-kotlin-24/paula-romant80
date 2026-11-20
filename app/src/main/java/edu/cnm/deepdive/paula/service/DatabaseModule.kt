@@ -11,6 +11,7 @@ import edu.cnm.deepdive.paula.model.dao.CategoryDao
 import edu.cnm.deepdive.paula.model.dao.RoutineDao
 import edu.cnm.deepdive.paula.model.dao.RoutineLogDao
 import edu.cnm.deepdive.paula.model.dao.TaskDao
+import edu.cnm.deepdive.paula.model.dao.UserDao
 import edu.cnm.deepdive.paula.model.dao.VoicePromptDao
 import jakarta.inject.Singleton
 
@@ -26,7 +27,13 @@ class DatabaseModule {
             PaulaDatabase::class.java,
             PaulaDatabase.DATABASE_NAME
         )
+            .fallbackToDestructiveMigration()
             .build()
+
+    @Provides
+    @Singleton
+    fun provideUserDao(database: PaulaDatabase): UserDao =
+        database.getUserDao()
 
     @Provides
     @Singleton

@@ -7,16 +7,19 @@ import edu.cnm.deepdive.paula.model.dao.CategoryDao
 import edu.cnm.deepdive.paula.model.dao.RoutineDao
 import edu.cnm.deepdive.paula.model.dao.RoutineLogDao
 import edu.cnm.deepdive.paula.model.dao.TaskDao
+import edu.cnm.deepdive.paula.model.dao.UserDao
 import edu.cnm.deepdive.paula.model.dao.VoicePromptDao
 import edu.cnm.deepdive.paula.model.entity.Category
 import edu.cnm.deepdive.paula.model.entity.Routine
 import edu.cnm.deepdive.paula.model.entity.RoutineLog
 import edu.cnm.deepdive.paula.model.entity.Task
+import edu.cnm.deepdive.paula.model.entity.User
 import edu.cnm.deepdive.paula.model.entity.VoicePrompt
 import edu.cnm.deepdive.paula.service.PaulaDatabase.Companion.DATABASE_VERSION
 
 @Database(
     entities = [
+        User::class,
         Category::class,
         VoicePrompt::class,
         Task::class,
@@ -27,6 +30,8 @@ import edu.cnm.deepdive.paula.service.PaulaDatabase.Companion.DATABASE_VERSION
 )
 @TypeConverters(Converters::class)
 abstract class PaulaDatabase : RoomDatabase() {
+
+    abstract fun getUserDao(): UserDao
 
     abstract fun getCategoryDao(): CategoryDao
 

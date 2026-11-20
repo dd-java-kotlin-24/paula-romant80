@@ -12,6 +12,12 @@ import java.time.LocalDate
     tableName = "routine",
     foreignKeys = [
         ForeignKey(
+            entity = User::class,
+            parentColumns = ["user_id"],
+            childColumns = ["user_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
             entity = Category::class,
             parentColumns = ["category_id"],
             childColumns = ["category_id"],
@@ -25,6 +31,7 @@ import java.time.LocalDate
         )
     ],
     indices = [
+        Index(value = ["user_id"]),
         Index(value = ["category_id"]),
         Index(value = ["voice_prompt_id"])
     ]
@@ -33,6 +40,9 @@ data class Routine(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "routine_id")
     val id: Long = 0,
+
+    @ColumnInfo(name = "user_id")
+    val userId: Long = 0,
 
     @ColumnInfo(name = "category_id")
     val categoryId: Long? = null,

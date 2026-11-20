@@ -11,6 +11,12 @@ import java.time.Instant
     tableName = "task",
     foreignKeys = [
         ForeignKey(
+            entity = User::class,
+            parentColumns = ["user_id"],
+            childColumns = ["user_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
             entity = Category::class,
             parentColumns = ["category_id"],
             childColumns = ["category_id"],
@@ -24,6 +30,7 @@ import java.time.Instant
         )
     ],
     indices = [
+        Index(value = ["user_id"]),
         Index(value = ["category_id"]),
         Index(value = ["voice_prompt_id"]),
         Index(value = ["is_completed", "due_date"])
@@ -33,6 +40,9 @@ data class Task(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "task_id")
     val id: Long = 0,
+
+    @ColumnInfo(name = "user_id")
+    val userId: Long = 0,
 
     @ColumnInfo(name = "category_id")
     val categoryId: Long? = null,
