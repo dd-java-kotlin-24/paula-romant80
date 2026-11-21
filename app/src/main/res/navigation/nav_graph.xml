@@ -9,13 +9,17 @@
         android:id="@+id/nav_routines"
         android:name="edu.cnm.deepdive.paula.controller.RoutineFragment"
         android:label="@string/app_name"
-        tools:layout="@layout/fragment_routine" />
+        tools:layout="@layout/fragment_routine"
+        tools:layout_editor_absoluteX="40dp"
+        tools:layout_editor_absoluteY="40dp" />
 
     <fragment
         android:id="@+id/nav_tasks"
         android:name="edu.cnm.deepdive.paula.controller.TaskFragment"
         android:label="@string/app_name"
-        tools:layout="@layout/fragment_task">
+        tools:layout="@layout/fragment_task"
+        tools:layout_editor_absoluteX="360dp"
+        tools:layout_editor_absoluteY="40dp">
 
         <action
             android:id="@+id/action_tasks_to_task_edit"
@@ -27,13 +31,17 @@
         android:id="@+id/nav_voice_prompts"
         android:name="edu.cnm.deepdive.paula.controller.VoicePromptFragment"
         android:label="@string/app_name"
-        tools:layout="@layout/fragment_voice_prompt" />
+        tools:layout="@layout/fragment_voice_prompt"
+        tools:layout_editor_absoluteX="680dp"
+        tools:layout_editor_absoluteY="40dp" />
 
     <dialog
         android:id="@+id/nav_task_edit"
         android:name="edu.cnm.deepdive.paula.controller.TaskEditFragment"
         android:label="@string/title_task_edit"
-        tools:layout="@layout/fragment_task_edit">
+        tools:layout="@layout/fragment_task_edit"
+        tools:layout_editor_absoluteX="360dp"
+        tools:layout_editor_absoluteY="420dp">
 
         <argument
             android:name="taskId"
@@ -45,6 +53,8 @@
     <fragment
         android:id="@+id/nav_settings"
         android:name="edu.cnm.deepdive.paula.controller.SettingsFragment"
-        android:label="@string/title_settings" />
+        android:label="@string/title_settings"
+        tools:layout_editor_absoluteX="680dp"
+        tools:layout_editor_absoluteY="420dp" />
 
 </navigation>
