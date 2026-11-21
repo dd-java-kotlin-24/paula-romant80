@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 /**
  * ViewModel managing routine habits, streak progression, and active user scoping.
@@ -118,6 +119,32 @@ class RoutineViewModel @Inject constructor(
             } catch (e: Throwable) {
                 _throwable.postValue(e)
             }
+        }
+    }
+
+    fun removeCompletion(
+        routine: Routine,
+        onComplete: ((Routine) -> Unit)? = null
+    ) {
+        viewModelScope.launch {
+            try {
+                val updated = routineRepository.removeCompletion(routine)
+                onComplete?.invoke(updated)
+            } catch (e: Throwable) {
+                _throwable.postValue(e)
+            }
+        }
+    }
+
+    fun toggleCompletion(
+        routine: Routine,
+        onComplete: ((Routine) -> Unit)? = null
+    ) {
+        val today = LocalDate.now()
+        if (routine.lastCompletedDate == today) {
+            removeCompletion(routine, onComplete)
+        } else {
+            recordCompletion(routine, onComplete = onComplete)
         }
     }
 

@@ -74,4 +74,25 @@
     <string name="action_delete">Delete</string>
     <string name="dialog_delete_task_title">Delete Task</string>
     <string name="dialog_delete_task_message">Are you sure you want to delete this task? This action cannot be undone.</string>
+
+    <!-- Routine Habits & Card Strings -->
+    <string name="empty_routines_title">No habits tracked yet</string>
+    <string name="empty_routines_subtitle">Build consistent routines with Paula\'s guidance. Tap + to add one.</string>
+    <string name="filter_routine_all">All Habits</string>
+    <string name="filter_routine_pending">Need Check-In</string>
+    <string name="filter_routine_completed">Done Today</string>
+    <string name="action_check_in">Check In</string>
+    <string name="action_checked_in">Done</string>
+    <string name="streak_format">%1$d d</string>
+    <string name="streak_days_format">%1$d-day streak</string>
+    <string name="streak_none">0 d</string>
+    <string name="dialog_new_routine_title">New Daily Habit</string>
+    <string name="label_routine_name">Habit Name</string>
+    <string name="hint_routine_name">e.g., Morning Walk, Take Vitamins</string>
+    <string name="error_routine_name_required">Habit name is required</string>
+    <string name="label_routine_frequency">Frequency</string>
+    <string name="frequency_daily">Daily</string>
+    <string name="frequency_weekdays">Weekdays</string>
+    <string name="frequency_weekends">Weekends</string>
+    <string name="add_routine">Add routine</string>
 </resources>
