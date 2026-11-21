@@ -2,6 +2,7 @@ package edu.cnm.deepdive.paula.controller
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -13,6 +14,7 @@ import androidx.navigation.ui.setupWithNavController
 import dagger.hilt.android.AndroidEntryPoint
 import edu.cnm.deepdive.paula.R
 import edu.cnm.deepdive.paula.databinding.ActivityMainBinding
+import edu.cnm.deepdive.paula.viewmodel.UserViewModel
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -21,10 +23,12 @@ class MainActivity : AppCompatActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
+    private val userViewModel: UserViewModel by viewModels()
     private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        userViewModel.loadOrCreate("default", "Paula User")
         setupLayout()
         setupNavigation()
     }
