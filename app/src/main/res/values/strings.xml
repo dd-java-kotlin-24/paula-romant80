@@ -46,4 +46,14 @@
     <string name="pref_reminders_summary">Receive scheduled notifications for daily routines</string>
     <string name="pref_quiet_hours_title">Quiet Hours (10 PM – 7 AM)</string>
     <string name="pref_quiet_hours_summary">Silence audio voice prompts during rest hours</string>
+
+    <!-- Task List & Card Strings -->
+    <string name="filter_all">All</string>
+    <string name="filter_pending">Pending</string>
+    <string name="filter_completed">Completed</string>
+    <string name="empty_tasks_title">All caught up!</string>
+    <string name="empty_tasks_subtitle">No tasks in this view. Tap + to create one.</string>
+    <string name="priority_high">High</string>
+    <string name="priority_medium">Med</string>
+    <string name="priority_low">Low</string>
 </resources>
