@@ -15,11 +15,20 @@
  */
 package edu.cnm.deepdive.paula.controller
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
@@ -38,6 +47,7 @@ import edu.cnm.deepdive.paula.model.entity.Task
 import edu.cnm.deepdive.paula.viewmodel.TaskViewModel
 import edu.cnm.deepdive.paula.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -60,6 +70,25 @@ class TaskEditFragment : DialogFragment() {
     private var selectedDueDate: Instant? = null
     private var selectedCategoryId: Long? = null
     private var availableCategories: List<Category> = emptyList()
+    private var attachedPhotoUri: Uri? = null
+    private var pendingCameraUri: Uri? = null
+
+    private val takePhotoLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && pendingCameraUri != null) {
+            attachedPhotoUri = pendingCameraUri
+            showAttachedPhoto(attachedPhotoUri)
+        }
+    }
+
+    private val pickPhotoLauncher = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            copyToAppStorageAndAttach(uri)
+        }
+    }
 
     private val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
         .withZone(ZoneId.of("UTC"))
@@ -132,6 +161,25 @@ class TaskEditFragment : DialogFragment() {
                 availableCategories.getOrNull(position - 1)?.id
             }
         }
+
+        binding.btnTakePhoto.setOnClickListener {
+            launchCamera()
+        }
+
+        binding.btnChoosePhoto.setOnClickListener {
+            pickPhotoLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        }
+
+        binding.btnRetakePhoto.setOnClickListener {
+            launchCamera()
+        }
+
+        binding.btnRemovePhoto.setOnClickListener {
+            attachedPhotoUri = null
+            showAttachedPhoto(null)
+        }
     }
 
     private fun observeViewModel() {
@@ -199,6 +247,108 @@ class TaskEditFragment : DialogFragment() {
             selectedCategoryId = null
             binding.categorySelector.setText(getString(R.string.category_none), false)
         }
+
+        if (!task.photoUri.isNullOrBlank()) {
+            attachedPhotoUri = Uri.parse(task.photoUri)
+            showAttachedPhoto(attachedPhotoUri)
+        } else {
+            attachedPhotoUri = null
+            showAttachedPhoto(null)
+        }
+    }
+
+    private fun launchCamera() {
+        try {
+            val context = requireContext()
+            val picturesDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES) ?: context.filesDir
+            val photoFile = File.createTempFile("proof_${System.currentTimeMillis()}_", ".jpg", picturesDir)
+            val authority = "${context.packageName}.fileprovider"
+            val uri = FileProvider.getUriForFile(context, authority, photoFile)
+            pendingCameraUri = uri
+            takePhotoLauncher.launch(uri)
+        } catch (_: Exception) {
+            // Camera launch exception handling
+        }
+    }
+
+    private fun copyToAppStorageAndAttach(sourceUri: Uri) {
+        try {
+            val context = requireContext()
+            val picturesDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES) ?: context.filesDir
+            val targetFile = File(picturesDir, "task_photo_${System.currentTimeMillis()}.jpg")
+            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                targetFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            val authority = "${context.packageName}.fileprovider"
+            val permanentUri = FileProvider.getUriForFile(context, authority, targetFile)
+            attachedPhotoUri = permanentUri
+            showAttachedPhoto(permanentUri)
+        } catch (_: Exception) {
+            attachedPhotoUri = sourceUri
+            showAttachedPhoto(sourceUri)
+        }
+    }
+
+    private fun showAttachedPhoto(uri: Uri?) {
+        if (uri == null) {
+            binding.photoPreview.setImageDrawable(null)
+            binding.photoPreviewCard.isVisible = false
+            binding.photoActionContainer.isVisible = true
+        } else {
+            val bitmap = loadScaledBitmap(uri)
+            if (bitmap != null) {
+                binding.photoPreview.setImageBitmap(bitmap)
+            } else {
+                binding.photoPreview.setImageURI(uri)
+            }
+            binding.photoPreviewCard.isVisible = true
+            binding.photoActionContainer.isVisible = false
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun loadScaledBitmap(uri: Uri, maxWidth: Int = 1080, maxHeight: Int = 1080): Bitmap? {
+        val context = context ?: return null
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(context.contentResolver, uri)
+                ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                    val size = info.size
+                    val widthRatio = size.width.toFloat() / maxWidth
+                    val heightRatio = size.height.toFloat() / maxHeight
+                    val maxRatio = maxOf(widthRatio, heightRatio)
+                    if (maxRatio > 1.0f) {
+                        val targetWidth = (size.width / maxRatio).toInt().coerceAtLeast(1)
+                        val targetHeight = (size.height / maxRatio).toInt().coerceAtLeast(1)
+                        decoder.setTargetSize(targetWidth, targetHeight)
+                    }
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                }
+            } else {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeStream(stream, null, options)
+                    var inSampleSize = 1
+                    if (options.outHeight > maxHeight || options.outWidth > maxWidth) {
+                        val halfHeight = options.outHeight / 2
+                        val halfWidth = options.outWidth / 2
+                        while ((halfHeight / inSampleSize) >= maxHeight && (halfWidth / inSampleSize) >= maxWidth) {
+                            inSampleSize *= 2
+                        }
+                    }
+                    val decodeOptions = BitmapFactory.Options().apply {
+                        this.inSampleSize = inSampleSize
+                    }
+                    context.contentResolver.openInputStream(uri)?.use { secondStream ->
+                        BitmapFactory.decodeStream(secondStream, null, decodeOptions)
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private fun showDatePicker() {
@@ -237,19 +387,22 @@ class TaskEditFragment : DialogFragment() {
         binding.saveButton.isEnabled = false
 
         val userId = userViewModel.currentUser.value?.id ?: 1L
+        val photoUriString = attachedPhotoUri?.toString()
         val taskToSave = currentTask?.copy(
             title = title,
             categoryId = selectedCategoryId,
             dueDate = selectedDueDate,
             priority = priority,
-            notes = if (notes.isNullOrBlank()) null else notes
+            notes = if (notes.isNullOrBlank()) null else notes,
+            photoUri = photoUriString
         ) ?: Task(
             userId = userId,
             title = title,
             categoryId = selectedCategoryId,
             dueDate = selectedDueDate,
             priority = priority,
-            notes = if (notes.isNullOrBlank()) null else notes
+            notes = if (notes.isNullOrBlank()) null else notes,
+            photoUri = photoUriString
         )
 
         taskViewModel.save(taskToSave) {

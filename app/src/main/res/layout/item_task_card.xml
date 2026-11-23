@@ -108,6 +108,17 @@
                 tools:text="Chores"
                 tools:visibility="visible" />
 
+            <ImageView
+                android:id="@+id/photo_indicator"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_camera"
+                app:tint="?attr/colorOutline"
+                android:contentDescription="@string/desc_photo_preview"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

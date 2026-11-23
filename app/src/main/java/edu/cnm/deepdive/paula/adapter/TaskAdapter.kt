@@ -19,6 +19,7 @@ import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -106,6 +107,9 @@ class TaskAdapter(
             } else {
                 binding.priorityBadge.visibility = View.GONE
             }
+
+            // Photo Proof Indicator
+            binding.photoIndicator.isVisible = !task.photoUri.isNullOrBlank()
 
             // Entire Card Click
             binding.root.setOnClickListener {

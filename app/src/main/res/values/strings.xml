@@ -78,6 +78,11 @@
     <string name="hint_due_date">Select a due date (optional)</string>
     <string name="label_notes">Notes &amp; Details</string>
     <string name="hint_notes">Add steps, reminders, or details…</string>
+    <string name="label_photo_proof">Photo Proof of Clean Space</string>
+    <string name="action_take_photo">Take Photo</string>
+    <string name="action_choose_photo">Gallery</string>
+    <string name="action_remove_photo">Remove</string>
+    <string name="desc_photo_preview">Attached proof of completed chore</string>
     <string name="action_save">Save</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_delete">Delete</string>
