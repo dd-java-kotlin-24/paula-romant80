@@ -27,10 +27,19 @@
     <string name="streak_banner_title">5-Day Habit Streak!</string>
     <string name="streak_banner_subtitle">Routines completed today • Nice and neat</string>
     <string name="action_play_greeting">Play Voice</string>
-    <string name="action_watch_tutorial">Tutorial</string>
+    <string name="action_stop_voice">Stop Voice</string>
+    <string name="action_watch_tutorial">Watch Paula</string>
     <string name="avatar_content_description">Paula\'s 2D Companion Avatar</string>
     <string name="quote_icon_content_description">Speech quote icon</string>
     <string name="streak_icon_content_description">Streak progress icon</string>
+    <string name="status_playing_voice">Playing spoken affirmation…</string>
+    <string name="status_playing_video">Playing companion video…</string>
+    <string name="status_quiet_hours">Quiet Hours active (10 PM – 7 AM) • Voice muted</string>
+    <string name="status_voice_disabled">Voice affirmations disabled in Settings</string>
+    <string name="streak_habits_completed">%1$d of %2$d routines completed today • Keep it up!</string>
+    <string name="streak_habits_zero">No routines completed today • Ready to start?</string>
+    <string name="streak_active_title">%1$d-Day Habit Streak!</string>
+    <string name="streak_none_title">Start Your Streak!</string>
 
     <!-- Settings Screen Strings -->
     <string name="pref_category_voice">Voice &amp; Companion</string>
