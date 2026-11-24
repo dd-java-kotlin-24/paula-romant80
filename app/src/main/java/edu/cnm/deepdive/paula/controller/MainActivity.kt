@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -11,15 +13,22 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
-import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
 import edu.cnm.deepdive.paula.R
 import edu.cnm.deepdive.paula.databinding.ActivityMainBinding
 import edu.cnm.deepdive.paula.viewmodel.UserViewModel
+import kotlinx.coroutines.launch
+import java.util.UUID
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -41,6 +50,7 @@ class MainActivity : AppCompatActivity() {
         requestNotificationPermission()
         setupLayout()
         setupNavigation()
+        observeCurrentUser()
     }
 
     private fun requestNotificationPermission() {
@@ -72,7 +82,82 @@ class MainActivity : AppCompatActivity() {
         binding.toolbar.setupWithNavController(navController, appBarConfiguration)
         binding.toolbar.inflateMenu(R.menu.main_options)
         binding.toolbar.setOnMenuItemClickListener { item ->
-            NavigationUI.onNavDestinationSelected(item, navController)
+            when (item.itemId) {
+                R.id.action_switch_profile -> {
+                    showProfileSwitcherDialog()
+                    true
+                }
+                else -> NavigationUI.onNavDestinationSelected(item, navController)
+            }
         }
+    }
+
+    private fun observeCurrentUser() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                userViewModel.currentUser.collect { user ->
+                    binding.toolbar.subtitle = user?.displayName
+                }
+            }
+        }
+    }
+
+    private fun showProfileSwitcherDialog() {
+        val users = userViewModel.users.value
+        val currentUser = userViewModel.currentUser.value
+        val names = users.map { it.displayName }.toTypedArray()
+        val currentIndex = users.indexOfFirst { it.id == currentUser?.id }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.dialog_switch_profile_title)
+            .setSingleChoiceItems(names, currentIndex) { dialog, which ->
+                val selectedUser = users.getOrNull(which)
+                if (selectedUser != null) {
+                    userViewModel.setCurrentUser(selectedUser)
+                    Toast.makeText(
+                        this,
+                        getString(R.string.toast_profile_switched, selectedUser.displayName),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                dialog.dismiss()
+            }
+            .setNeutralButton(R.string.action_add_profile) { _, _ ->
+                showAddProfileDialog()
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
+    }
+
+    private fun showAddProfileDialog() {
+        val input = TextInputEditText(this).apply {
+            hint = getString(R.string.hint_profile_name)
+            setSingleLine()
+        }
+        val container = FrameLayout(this).apply {
+            val paddingH = (24 * resources.displayMetrics.density).toInt()
+            val paddingV = (8 * resources.displayMetrics.density).toInt()
+            setPadding(paddingH, paddingV, paddingH, paddingV)
+            addView(input)
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.dialog_add_profile_title)
+            .setView(container)
+            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.action_save) { _, _ ->
+                val name = input.text?.toString()?.trim().orEmpty()
+                if (name.isNotBlank()) {
+                    val oauthKey = UUID.randomUUID().toString()
+                    userViewModel.loadOrCreate(oauthKey, name) { newUser ->
+                        Toast.makeText(
+                            this,
+                            getString(R.string.toast_profile_switched, newUser.displayName),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+            .show()
     }
 }

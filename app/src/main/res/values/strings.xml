@@ -123,4 +123,10 @@
     <string name="notification_reminder_title">Habit Reminder: %1$s</string>
     <string name="notification_reminder_content">Time for your daily routine! Paula is cheering you on. Keep your streak alive! 🔥</string>
     <string name="notification_reminder_content_long">Time to check off \"%1$s\"! Consistent habits build a peaceful home. Tap to complete and keep your streak alive! 🔥</string>
+    <string name="action_switch_profile">Switch Profile</string>
+    <string name="dialog_switch_profile_title">Select User Profile</string>
+    <string name="action_add_profile">Add New Profile</string>
+    <string name="dialog_add_profile_title">Create User Profile</string>
+    <string name="hint_profile_name">e.g., Mom, Roman, Roommate</string>
+    <string name="toast_profile_switched">Active profile: %1$s</string>
 </resources>
