@@ -15,11 +15,15 @@
  */
 package edu.cnm.deepdive.paula.controller
 
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -27,7 +31,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
 import edu.cnm.deepdive.paula.R
@@ -84,6 +91,79 @@ class RoutineFragment : Fragment() {
             }
         )
         binding.routinesRecyclerView.adapter = routineAdapter
+
+        val swipeCallback = object : ItemTouchHelper.SimpleCallback(
+            0,
+            ItemTouchHelper.RIGHT
+        ) {
+            private val completeBackground = ColorDrawable(0xFF2E7D32.toInt())
+            private val checkIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_task_alt)
+
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.bindingAdapterPosition
+                val routine = routineAdapter.currentList.getOrNull(position) ?: return
+
+                val wasDoneToday = routine.lastCompletedDate == LocalDate.now()
+                routineViewModel.toggleCompletion(routine)
+                routineAdapter.notifyItemChanged(position)
+
+                val messageRes = if (!wasDoneToday) {
+                    R.string.snackbar_routine_checked
+                } else {
+                    R.string.snackbar_routine_unchecked
+                }
+                Snackbar.make(binding.root, messageRes, Snackbar.LENGTH_SHORT)
+                    .setAction(R.string.action_undo) {
+                        routineViewModel.toggleCompletion(routine)
+                    }
+                    .show()
+            }
+
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
+                val itemView = viewHolder.itemView
+                val itemHeight = itemView.bottom - itemView.top
+
+                if (dX > 0) {
+                    completeBackground.setBounds(
+                        itemView.left,
+                        itemView.top,
+                        itemView.left + dX.toInt(),
+                        itemView.bottom
+                    )
+                    completeBackground.draw(c)
+
+                    checkIcon?.let { icon ->
+                        val iconMargin = (itemHeight - icon.intrinsicHeight) / 2
+                        val iconTop = itemView.top + iconMargin
+                        val iconBottom = iconTop + icon.intrinsicHeight
+                        val iconLeft = itemView.left + iconMargin
+                        val iconRight = iconLeft + icon.intrinsicWidth
+                        if (iconRight < itemView.left + dX.toInt()) {
+                            icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                            icon.setTint(Color.WHITE)
+                            icon.draw(c)
+                        }
+                    }
+                }
+
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            }
+        }
+        ItemTouchHelper(swipeCallback).attachToRecyclerView(binding.routinesRecyclerView)
     }
 
     private fun setupFilters() {
