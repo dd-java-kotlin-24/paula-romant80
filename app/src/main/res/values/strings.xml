@@ -115,4 +115,12 @@
     <string name="frequency_weekdays">Weekdays</string>
     <string name="frequency_weekends">Weekends</string>
     <string name="add_routine">Add routine</string>
+    <string name="label_reminder_time">Reminder Time</string>
+    <string name="hint_set_reminder">Set daily reminder</string>
+    <string name="action_clear_reminder">Clear Time</string>
+    <string name="notification_channel_name">Routine &amp; Habit Reminders</string>
+    <string name="notification_channel_description">Daily habit reminders and encouraging check-ins from Paula</string>
+    <string name="notification_reminder_title">Habit Reminder: %1$s</string>
+    <string name="notification_reminder_content">Time for your daily routine! Paula is cheering you on. Keep your streak alive! 🔥</string>
+    <string name="notification_reminder_content_long">Time to check off \"%1$s\"! Consistent habits build a peaceful home. Tap to complete and keep your streak alive! 🔥</string>
 </resources>

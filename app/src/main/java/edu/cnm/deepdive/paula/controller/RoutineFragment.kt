@@ -23,6 +23,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -33,18 +34,23 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import dagger.hilt.android.AndroidEntryPoint
 import edu.cnm.deepdive.paula.R
 import edu.cnm.deepdive.paula.adapter.RoutineAdapter
 import edu.cnm.deepdive.paula.databinding.FragmentRoutineBinding
 import edu.cnm.deepdive.paula.model.entity.Routine
+import edu.cnm.deepdive.paula.service.ReminderManager
 import edu.cnm.deepdive.paula.viewmodel.RoutineViewModel
 import edu.cnm.deepdive.paula.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.util.Locale
 
 /**
  * Fragment presenting recurring habits, streak progression, and daily check-ins.
@@ -215,59 +221,133 @@ class RoutineFragment : Fragment() {
     }
 
     private fun showCreateRoutineDialog() {
-        val input = TextInputEditText(requireContext()).apply {
+        val context = requireContext()
+        val density = resources.displayMetrics.density
+        var selectedTime: String? = null
+
+        val nameInput = TextInputEditText(context).apply {
             hint = getString(R.string.hint_routine_name)
             setSingleLine()
         }
-        val container = FrameLayout(requireContext()).apply {
-            val padding = (24 * resources.displayMetrics.density).toInt()
-            setPadding(padding, (8 * resources.displayMetrics.density).toInt(), padding, 0)
-            addView(input)
+
+        val timeButton = MaterialButton(context, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
+            text = getString(R.string.hint_set_reminder)
+            setIconResource(R.drawable.ic_calendar_today)
         }
 
-        MaterialAlertDialogBuilder(requireContext())
+        timeButton.setOnClickListener {
+            val picker = MaterialTimePicker.Builder()
+                .setTimeFormat(TimeFormat.CLOCK_12H)
+                .setHour(8)
+                .setMinute(0)
+                .setTitleText(R.string.label_reminder_time)
+                .build()
+
+            picker.addOnPositiveButtonClickListener {
+                val formatted = String.format(Locale.getDefault(), "%02d:%02d", picker.hour, picker.minute)
+                selectedTime = formatted
+                timeButton.text = getString(R.string.label_reminder_time) + ": " + formatted
+            }
+            picker.show(parentFragmentManager, "create_routine_time_picker")
+        }
+
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            val paddingH = (24 * density).toInt()
+            val paddingV = (8 * density).toInt()
+            setPadding(paddingH, paddingV, paddingH, paddingV)
+            addView(nameInput)
+            addView(timeButton)
+        }
+
+        MaterialAlertDialogBuilder(context)
             .setTitle(R.string.dialog_new_routine_title)
             .setView(container)
             .setNegativeButton(R.string.action_cancel, null)
             .setPositiveButton(R.string.action_save) { _, _ ->
-                val name = input.text?.toString()?.trim().orEmpty()
+                val name = nameInput.text?.toString()?.trim().orEmpty()
                 if (name.isNotBlank()) {
                     val userId = userViewModel.currentUser.value?.id ?: 1L
                     val routine = Routine(
                         userId = userId,
                         name = name,
-                        frequency = "DAILY"
+                        frequency = "DAILY",
+                        reminderTime = selectedTime
                     )
                     routineViewModel.save(routine)
+                    if (selectedTime != null) {
+                        ReminderManager.schedule(context, routine)
+                    }
                 }
             }
             .show()
     }
 
     private fun showEditRoutineDialog(routine: Routine) {
-        val input = TextInputEditText(requireContext()).apply {
+        val context = requireContext()
+        val density = resources.displayMetrics.density
+        var selectedTime: String? = routine.reminderTime
+
+        val nameInput = TextInputEditText(context).apply {
             setText(routine.name)
             hint = getString(R.string.hint_routine_name)
             setSingleLine()
         }
-        val container = FrameLayout(requireContext()).apply {
-            val padding = (24 * resources.displayMetrics.density).toInt()
-            setPadding(padding, (8 * resources.displayMetrics.density).toInt(), padding, 0)
-            addView(input)
+
+        val timeButton = MaterialButton(context, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
+            text = if (!routine.reminderTime.isNullOrBlank()) {
+                getString(R.string.label_reminder_time) + ": " + routine.reminderTime
+            } else {
+                getString(R.string.hint_set_reminder)
+            }
+            setIconResource(R.drawable.ic_calendar_today)
         }
 
-        MaterialAlertDialogBuilder(requireContext())
+        timeButton.setOnClickListener {
+            val initialHour = routine.reminderTime?.split(":")?.getOrNull(0)?.toIntOrNull() ?: 8
+            val initialMinute = routine.reminderTime?.split(":")?.getOrNull(1)?.toIntOrNull() ?: 0
+            val picker = MaterialTimePicker.Builder()
+                .setTimeFormat(TimeFormat.CLOCK_12H)
+                .setHour(initialHour)
+                .setMinute(initialMinute)
+                .setTitleText(R.string.label_reminder_time)
+                .build()
+
+            picker.addOnPositiveButtonClickListener {
+                val formatted = String.format(Locale.getDefault(), "%02d:%02d", picker.hour, picker.minute)
+                selectedTime = formatted
+                timeButton.text = getString(R.string.label_reminder_time) + ": " + formatted
+            }
+            picker.show(parentFragmentManager, "edit_routine_time_picker")
+        }
+
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            val paddingH = (24 * density).toInt()
+            val paddingV = (8 * density).toInt()
+            setPadding(paddingH, paddingV, paddingH, paddingV)
+            addView(nameInput)
+            addView(timeButton)
+        }
+
+        MaterialAlertDialogBuilder(context)
             .setTitle(routine.name)
             .setView(container)
             .setNeutralButton(R.string.action_delete) { _, _ ->
                 routineViewModel.remove(routine)
+                ReminderManager.cancel(context, routine.id)
             }
             .setNegativeButton(R.string.action_cancel, null)
             .setPositiveButton(R.string.action_save) { _, _ ->
-                val name = input.text?.toString()?.trim().orEmpty()
+                val name = nameInput.text?.toString()?.trim().orEmpty()
                 if (name.isNotBlank()) {
-                    val updated = routine.copy(name = name)
+                    val updated = routine.copy(name = name, reminderTime = selectedTime)
                     routineViewModel.save(updated)
+                    if (selectedTime != null) {
+                        ReminderManager.schedule(context, updated)
+                    } else {
+                        ReminderManager.cancel(context, routine.id)
+                    }
                 }
             }
             .show()

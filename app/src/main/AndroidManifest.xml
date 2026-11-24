@@ -18,6 +18,8 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools">
 
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
   <uses-feature
     android:name="android.hardware.camera"
     android:required="false" />
@@ -50,6 +52,14 @@
         android:name="android.support.FILE_PROVIDER_PATHS"
         android:resource="@xml/file_paths" />
     </provider>
+
+    <receiver
+      android:name=".service.ReminderReceiver"
+      android:exported="false">
+      <intent-filter>
+        <action android:name="edu.cnm.deepdive.paula.ACTION_REMINDER" />
+      </intent-filter>
+    </receiver>
 
   </application>
 
