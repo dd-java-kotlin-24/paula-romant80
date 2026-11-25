@@ -274,9 +274,11 @@ class RoutineFragment : Fragment() {
                         frequency = "DAILY",
                         reminderTime = selectedTime
                     )
-                    routineViewModel.save(routine)
-                    if (selectedTime != null) {
-                        ReminderManager.schedule(context, routine)
+                    val appContext = context.applicationContext
+                    routineViewModel.save(routine) { saved ->
+                        if (selectedTime != null) {
+                            ReminderManager.schedule(appContext, saved)
+                        }
                     }
                 }
             }
@@ -342,11 +344,13 @@ class RoutineFragment : Fragment() {
                 val name = nameInput.text?.toString()?.trim().orEmpty()
                 if (name.isNotBlank()) {
                     val updated = routine.copy(name = name, reminderTime = selectedTime)
-                    routineViewModel.save(updated)
-                    if (selectedTime != null) {
-                        ReminderManager.schedule(context, updated)
-                    } else {
-                        ReminderManager.cancel(context, routine.id)
+                    val appContext = context.applicationContext
+                    routineViewModel.save(updated) { saved ->
+                        if (selectedTime != null) {
+                            ReminderManager.schedule(appContext, saved)
+                        } else {
+                            ReminderManager.cancel(appContext, saved.id)
+                        }
                     }
                 }
             }
