@@ -23,12 +23,15 @@
 
     <!-- Companion Screen Strings -->
     <string name="prompt_default_greeting">\"Good morning! What should we get started on today?\"</string>
-    <string name="prompt_audio_subtitle">Spoken voice affirmation • Tap to hear Paula</string>
+    <string name="prompt_audio_subtitle">Tap quote or Paula for next • Spoken affirmation</string>
     <string name="streak_banner_title">5-Day Habit Streak!</string>
     <string name="streak_banner_subtitle">Routines completed today • Nice and neat</string>
     <string name="action_play_greeting">Play Voice</string>
     <string name="action_stop_voice">Stop Voice</string>
+    <string name="action_stop_video">Stop Video</string>
     <string name="action_watch_tutorial">Watch Paula</string>
+    <string name="error_audio_playback">Unable to play audio clip</string>
+    <string name="error_photo_attach">Unable to attach photo</string>
     <string name="avatar_content_description">Paula\'s 2D Companion Avatar</string>
     <string name="quote_icon_content_description">Speech quote icon</string>
     <string name="streak_icon_content_description">Streak progress icon</string>
@@ -109,6 +112,7 @@
     <string name="dialog_new_routine_title">New Daily Habit</string>
     <string name="label_routine_name">Habit Name</string>
     <string name="hint_routine_name">e.g., Morning Walk, Take Vitamins</string>
+    <string name="hint_routine_description">Notes or goal (optional)</string>
     <string name="error_routine_name_required">Habit name is required</string>
     <string name="label_routine_frequency">Frequency</string>
     <string name="frequency_daily">Daily</string>

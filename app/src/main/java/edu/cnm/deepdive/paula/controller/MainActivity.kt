@@ -21,6 +21,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.setupWithNavController
+import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
@@ -46,7 +47,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        userViewModel.loadOrCreate("default", "Paula User")
+        if (userViewModel.currentUser.value == null) {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+            val savedOauthKey = prefs.getString(PREF_ACTIVE_OAUTH_KEY, DEFAULT_OAUTH_KEY) ?: DEFAULT_OAUTH_KEY
+            val savedDisplayName = prefs.getString(PREF_ACTIVE_DISPLAY_NAME, DEFAULT_DISPLAY_NAME) ?: DEFAULT_DISPLAY_NAME
+            userViewModel.loadOrCreate(savedOauthKey, savedDisplayName)
+        }
         requestNotificationPermission()
         setupLayout()
         setupNavigation()
@@ -93,13 +99,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeCurrentUser() {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 userViewModel.currentUser.collect { user ->
                     binding.toolbar.subtitle = user?.displayName
+                    if (user != null) {
+                        prefs.edit()
+                            .putString(PREF_ACTIVE_OAUTH_KEY, user.oauthKey)
+                            .putString(PREF_ACTIVE_DISPLAY_NAME, user.displayName)
+                            .apply()
+                    }
                 }
             }
         }
+    }
+
+    companion object {
+        private const val PREF_ACTIVE_OAUTH_KEY = "active_user_oauth_key"
+        private const val PREF_ACTIVE_DISPLAY_NAME = "active_user_display_name"
+        private const val DEFAULT_OAUTH_KEY = "default"
+        private const val DEFAULT_DISPLAY_NAME = "Paula User"
     }
 
     private fun showProfileSwitcherDialog() {

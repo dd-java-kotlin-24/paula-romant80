@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -67,7 +68,7 @@ class RoutineViewModel @Inject constructor(
             if (id > 0L) {
                 routineRepository.getActiveByUser(id)
             } else {
-                routineRepository.getAll()
+                flowOf(emptyList())
             }
         }
         .stateIn(

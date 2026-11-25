@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -34,6 +35,7 @@ import edu.cnm.deepdive.paula.R
 import edu.cnm.deepdive.paula.databinding.FragmentVoicePromptBinding
 import edu.cnm.deepdive.paula.model.entity.VoicePrompt
 import edu.cnm.deepdive.paula.viewmodel.RoutineViewModel
+import edu.cnm.deepdive.paula.viewmodel.UserViewModel
 import edu.cnm.deepdive.paula.viewmodel.VoicePromptViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -50,7 +52,8 @@ class VoicePromptFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val voicePromptViewModel: VoicePromptViewModel by viewModels()
-    private val routineViewModel: RoutineViewModel by activityViewModels()
+    private val routineViewModel: RoutineViewModel by viewModels()
+    private val userViewModel: UserViewModel by activityViewModels()
 
     private var mediaPlayer: MediaPlayer? = null
     private var isAudioPlaying = false
@@ -124,11 +127,22 @@ class VoicePromptFragment : Fragment() {
         binding.avatarCard.setOnClickListener {
             voicePromptViewModel.selectRandomPrompt()
         }
+
+        binding.cardSpeechBubble.setOnClickListener {
+            voicePromptViewModel.selectRandomPrompt()
+        }
     }
 
     private fun observeViewModels() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    userViewModel.currentUser.collect { user ->
+                        if (user != null) {
+                            routineViewModel.setUserId(user.id)
+                        }
+                    }
+                }
                 launch {
                     voicePromptViewModel.prompts.collect { prompts ->
                         if (activePrompt == null && prompts.isNotEmpty()) {
@@ -210,7 +224,12 @@ class VoicePromptFragment : Fragment() {
         }
 
         val rawResId = voicePromptViewModel.getAudioResourceId(prompt)
-        mediaPlayer = MediaPlayer.create(requireContext(), rawResId).apply {
+        val player = MediaPlayer.create(requireContext(), rawResId)
+        if (player == null) {
+            Toast.makeText(requireContext(), R.string.error_audio_playback, Toast.LENGTH_SHORT).show()
+            return
+        }
+        mediaPlayer = player.apply {
             setOnCompletionListener {
                 onAudioComplete()
             }
@@ -269,7 +288,7 @@ class VoicePromptFragment : Fragment() {
         binding.avatarVideo.start()
 
         isVideoPlaying = true
-        binding.buttonTutorial.setText(R.string.action_stop_voice)
+        binding.buttonTutorial.setText(R.string.action_stop_video)
         binding.buttonTutorial.setIconResource(R.drawable.ic_stop)
         binding.textAudioStatus.setText(R.string.status_playing_video)
         voicePromptViewModel.markPlayed(prompt)

@@ -45,4 +45,7 @@ interface RoutineDao {
     @Query("SELECT * FROM routine WHERE category_id = :categoryId ORDER BY name ASC")
     fun selectByCategory(categoryId: Long): Flow<List<Routine>>
 
+    @Query("SELECT * FROM routine WHERE is_active = 1 AND reminder_time IS NOT NULL")
+    suspend fun findAllWithReminders(): List<Routine>
+
 }

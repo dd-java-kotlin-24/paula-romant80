@@ -26,6 +26,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
@@ -267,7 +268,7 @@ class TaskEditFragment : DialogFragment() {
             pendingCameraUri = uri
             takePhotoLauncher.launch(uri)
         } catch (_: Exception) {
-            // Camera launch exception handling
+            Toast.makeText(requireContext(), R.string.error_photo_attach, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -286,8 +287,7 @@ class TaskEditFragment : DialogFragment() {
             attachedPhotoUri = permanentUri
             showAttachedPhoto(permanentUri)
         } catch (_: Exception) {
-            attachedPhotoUri = sourceUri
-            showAttachedPhoto(sourceUri)
+            Toast.makeText(requireContext(), R.string.error_photo_attach, Toast.LENGTH_SHORT).show()
         }
     }
 

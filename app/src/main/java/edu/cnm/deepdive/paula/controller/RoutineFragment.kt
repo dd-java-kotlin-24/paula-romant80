@@ -24,6 +24,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -221,84 +223,54 @@ class RoutineFragment : Fragment() {
     }
 
     private fun showCreateRoutineDialog() {
-        val context = requireContext()
-        val density = resources.displayMetrics.density
-        var selectedTime: String? = null
-
-        val nameInput = TextInputEditText(context).apply {
-            hint = getString(R.string.hint_routine_name)
-            setSingleLine()
-        }
-
-        val timeButton = MaterialButton(context, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
-            text = getString(R.string.hint_set_reminder)
-            setIconResource(R.drawable.ic_calendar_today)
-        }
-
-        timeButton.setOnClickListener {
-            val picker = MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_12H)
-                .setHour(8)
-                .setMinute(0)
-                .setTitleText(R.string.label_reminder_time)
-                .build()
-
-            picker.addOnPositiveButtonClickListener {
-                val formatted = String.format(Locale.getDefault(), "%02d:%02d", picker.hour, picker.minute)
-                selectedTime = formatted
-                timeButton.text = getString(R.string.label_reminder_time) + ": " + formatted
-            }
-            picker.show(parentFragmentManager, "create_routine_time_picker")
-        }
-
-        val container = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            val paddingH = (24 * density).toInt()
-            val paddingV = (8 * density).toInt()
-            setPadding(paddingH, paddingV, paddingH, paddingV)
-            addView(nameInput)
-            addView(timeButton)
-        }
-
-        MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.dialog_new_routine_title)
-            .setView(container)
-            .setNegativeButton(R.string.action_cancel, null)
-            .setPositiveButton(R.string.action_save) { _, _ ->
-                val name = nameInput.text?.toString()?.trim().orEmpty()
-                if (name.isNotBlank()) {
-                    val userId = userViewModel.currentUser.value?.id ?: 1L
-                    val routine = Routine(
-                        userId = userId,
-                        name = name,
-                        frequency = "DAILY",
-                        reminderTime = selectedTime
-                    )
-                    val appContext = context.applicationContext
-                    routineViewModel.save(routine) { saved ->
-                        if (selectedTime != null) {
-                            ReminderManager.schedule(appContext, saved)
-                        }
-                    }
-                }
-            }
-            .show()
+        showRoutineDialog(null)
     }
 
     private fun showEditRoutineDialog(routine: Routine) {
+        showRoutineDialog(routine)
+    }
+
+    private fun showRoutineDialog(existing: Routine?) {
         val context = requireContext()
         val density = resources.displayMetrics.density
-        var selectedTime: String? = routine.reminderTime
+        var selectedTime: String? = existing?.reminderTime
 
         val nameInput = TextInputEditText(context).apply {
-            setText(routine.name)
+            setText(existing?.name.orEmpty())
             hint = getString(R.string.hint_routine_name)
             setSingleLine()
         }
 
+        val descriptionInput = TextInputEditText(context).apply {
+            setText(existing?.description.orEmpty())
+            hint = getString(R.string.hint_routine_description)
+        }
+
+        val frequencyOptions = listOf(
+            "DAILY" to getString(R.string.frequency_daily),
+            "WEEKDAYS" to getString(R.string.frequency_weekdays),
+            "WEEKENDS" to getString(R.string.frequency_weekends)
+        )
+        val frequencyGroup = RadioGroup(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            val currentFreq = existing?.frequency ?: "DAILY"
+            frequencyOptions.forEachIndexed { index, (code, label) ->
+                val radio = RadioButton(context).apply {
+                    id = View.generateViewId()
+                    text = label
+                    tag = code
+                    setPadding(0, 0, (12 * density).toInt(), 0)
+                }
+                addView(radio)
+                if (code == currentFreq || (index == 0 && frequencyOptions.none { it.first == currentFreq })) {
+                    check(radio.id)
+                }
+            }
+        }
+
         val timeButton = MaterialButton(context, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
-            text = if (!routine.reminderTime.isNullOrBlank()) {
-                getString(R.string.label_reminder_time) + ": " + routine.reminderTime
+            text = if (!selectedTime.isNullOrBlank()) {
+                getString(R.string.label_reminder_time) + ": " + selectedTime
             } else {
                 getString(R.string.hint_set_reminder)
             }
@@ -306,8 +278,8 @@ class RoutineFragment : Fragment() {
         }
 
         timeButton.setOnClickListener {
-            val initialHour = routine.reminderTime?.split(":")?.getOrNull(0)?.toIntOrNull() ?: 8
-            val initialMinute = routine.reminderTime?.split(":")?.getOrNull(1)?.toIntOrNull() ?: 0
+            val initialHour = selectedTime?.split(":")?.getOrNull(0)?.toIntOrNull() ?: 8
+            val initialMinute = selectedTime?.split(":")?.getOrNull(1)?.toIntOrNull() ?: 0
             val picker = MaterialTimePicker.Builder()
                 .setTimeFormat(TimeFormat.CLOCK_12H)
                 .setHour(initialHour)
@@ -320,7 +292,7 @@ class RoutineFragment : Fragment() {
                 selectedTime = formatted
                 timeButton.text = getString(R.string.label_reminder_time) + ": " + formatted
             }
-            picker.show(parentFragmentManager, "edit_routine_time_picker")
+            picker.show(parentFragmentManager, "routine_time_picker")
         }
 
         val container = LinearLayout(context).apply {
@@ -329,32 +301,53 @@ class RoutineFragment : Fragment() {
             val paddingV = (8 * density).toInt()
             setPadding(paddingH, paddingV, paddingH, paddingV)
             addView(nameInput)
+            addView(descriptionInput)
+            addView(frequencyGroup)
             addView(timeButton)
         }
 
-        MaterialAlertDialogBuilder(context)
-            .setTitle(routine.name)
+        val builder = MaterialAlertDialogBuilder(context)
+            .setTitle(existing?.name ?: getString(R.string.dialog_new_routine_title))
             .setView(container)
-            .setNeutralButton(R.string.action_delete) { _, _ ->
-                routineViewModel.remove(routine)
-                ReminderManager.cancel(context, routine.id)
-            }
             .setNegativeButton(R.string.action_cancel, null)
             .setPositiveButton(R.string.action_save) { _, _ ->
                 val name = nameInput.text?.toString()?.trim().orEmpty()
                 if (name.isNotBlank()) {
-                    val updated = routine.copy(name = name, reminderTime = selectedTime)
+                    val description = descriptionInput.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }
+                    val checkedRadio = frequencyGroup.findViewById<RadioButton>(frequencyGroup.checkedRadioButtonId)
+                    val frequency = (checkedRadio?.tag as? String) ?: "DAILY"
+                    val userId = userViewModel.currentUser.value?.id ?: 1L
+                    val routineToSave = existing?.copy(
+                        name = name,
+                        description = description,
+                        frequency = frequency,
+                        reminderTime = selectedTime
+                    ) ?: Routine(
+                        userId = userId,
+                        name = name,
+                        description = description,
+                        frequency = frequency,
+                        reminderTime = selectedTime
+                    )
                     val appContext = context.applicationContext
-                    routineViewModel.save(updated) { saved ->
+                    routineViewModel.save(routineToSave) { saved ->
                         if (selectedTime != null) {
                             ReminderManager.schedule(appContext, saved)
-                        } else {
+                        } else if (existing != null) {
                             ReminderManager.cancel(appContext, saved.id)
                         }
                     }
                 }
             }
-            .show()
+
+        if (existing != null) {
+            builder.setNeutralButton(R.string.action_delete) { _, _ ->
+                routineViewModel.remove(existing)
+                ReminderManager.cancel(context.applicationContext, existing.id)
+            }
+        }
+
+        builder.show()
     }
 
     override fun onDestroyView() {

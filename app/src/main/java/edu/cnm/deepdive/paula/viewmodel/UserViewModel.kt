@@ -47,7 +47,7 @@ class UserViewModel @Inject constructor(
     val users: StateFlow<List<User>> = userRepository.getAll()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
+            started = SharingStarted.Eagerly,
             initialValue = emptyList()
         )
 
