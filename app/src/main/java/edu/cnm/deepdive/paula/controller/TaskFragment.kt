@@ -234,6 +234,11 @@ class TaskFragment : Fragment() {
                         applyFilter()
                     }
                 }
+                launch {
+                    taskViewModel.categories.collect { categories ->
+                        taskAdapter.setCategories(categories.associate { it.id to it.name })
+                    }
+                }
             }
         }
     }

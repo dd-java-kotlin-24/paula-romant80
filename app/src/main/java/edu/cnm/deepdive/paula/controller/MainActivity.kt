@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity() {
         val names = users.map { it.displayName }.toTypedArray()
         val currentIndex = users.indexOfFirst { it.id == currentUser?.id }
 
-        MaterialAlertDialogBuilder(this)
+        val builder = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.dialog_switch_profile_title)
             .setSingleChoiceItems(names, currentIndex) { dialog, which ->
                 val selectedUser = users.getOrNull(which)
@@ -146,7 +146,30 @@ class MainActivity : AppCompatActivity() {
                 showAddProfileDialog()
             }
             .setNegativeButton(R.string.action_cancel, null)
-            .show()
+
+        if (currentUser != null && currentUser.oauthKey != DEFAULT_OAUTH_KEY) {
+            builder.setPositiveButton(R.string.action_delete) { _, _ ->
+                val fallback = users.firstOrNull { it.oauthKey == DEFAULT_OAUTH_KEY }
+                    ?: users.firstOrNull { it.id != currentUser.id }
+                MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.dialog_delete_profile_title)
+                    .setMessage(getString(R.string.dialog_delete_profile_message, currentUser.displayName))
+                    .setNegativeButton(R.string.action_cancel, null)
+                    .setPositiveButton(R.string.action_delete) { _, _ ->
+                        userViewModel.deleteUser(currentUser, fallback) {
+                            if (fallback != null) {
+                                Toast.makeText(
+                                    this,
+                                    getString(R.string.toast_profile_switched, fallback.displayName),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                    .show()
+            }
+        }
+        builder.show()
     }
 
     private fun showAddProfileDialog() {
@@ -168,13 +191,25 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton(R.string.action_save) { _, _ ->
                 val name = input.text?.toString()?.trim().orEmpty()
                 if (name.isNotBlank()) {
-                    val oauthKey = UUID.randomUUID().toString()
-                    userViewModel.loadOrCreate(oauthKey, name) { newUser ->
+                    val existing = userViewModel.users.value.firstOrNull {
+                        it.displayName.equals(name, ignoreCase = true)
+                    }
+                    if (existing != null) {
+                        userViewModel.setCurrentUser(existing)
                         Toast.makeText(
                             this,
-                            getString(R.string.toast_profile_switched, newUser.displayName),
+                            getString(R.string.toast_profile_exists, existing.displayName),
                             Toast.LENGTH_SHORT
                         ).show()
+                    } else {
+                        val oauthKey = UUID.randomUUID().toString()
+                        userViewModel.loadOrCreate(oauthKey, name) { newUser ->
+                            Toast.makeText(
+                                this,
+                                getString(R.string.toast_profile_switched, newUser.displayName),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 }
             }

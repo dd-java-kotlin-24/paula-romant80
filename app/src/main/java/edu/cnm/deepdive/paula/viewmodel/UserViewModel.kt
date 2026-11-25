@@ -67,4 +67,18 @@ class UserViewModel @Inject constructor(
         }
     }
 
+    fun deleteUser(user: User, fallback: User?, onDeleted: (() -> Unit)? = null) {
+        viewModelScope.launch {
+            try {
+                userRepository.remove(user)
+                if (_currentUser.value?.id == user.id && fallback != null) {
+                    _currentUser.value = fallback
+                }
+                onDeleted?.invoke()
+            } catch (e: Throwable) {
+                _throwable.postValue(e)
+            }
+        }
+    }
+
 }

@@ -129,8 +129,26 @@ class VoicePromptFragment : Fragment() {
         }
 
         binding.cardSpeechBubble.setOnClickListener {
-            voicePromptViewModel.selectRandomPrompt()
+            showAffirmationPickerDialog()
         }
+    }
+
+    private fun showAffirmationPickerDialog() {
+        val prompts = voicePromptViewModel.prompts.value
+        if (prompts.isEmpty()) return
+        val titles = prompts.map { it.title }.toTypedArray()
+        val currentIndex = prompts.indexOfFirst { it.id == activePrompt?.id }
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.dialog_affirmations_title)
+            .setSingleChoiceItems(titles, currentIndex) { dialog, which ->
+                prompts.getOrNull(which)?.let { selected ->
+                    voicePromptViewModel.selectPrompt(selected)
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
     }
 
     private fun observeViewModels() {

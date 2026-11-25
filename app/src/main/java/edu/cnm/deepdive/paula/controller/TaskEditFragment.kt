@@ -181,6 +181,29 @@ class TaskEditFragment : DialogFragment() {
             attachedPhotoUri = null
             showAttachedPhoto(null)
         }
+
+        binding.photoPreview.setOnClickListener {
+            attachedPhotoUri?.let { uri ->
+                showFullScreenPhoto(uri)
+            }
+        }
+    }
+
+    private fun showFullScreenPhoto(uri: Uri) {
+        val imageView = android.widget.ImageView(requireContext()).apply {
+            adjustViewBounds = true
+            scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+            val bitmap = loadScaledBitmap(uri, 1920, 1920)
+            if (bitmap != null) {
+                setImageBitmap(bitmap)
+            } else {
+                setImageURI(uri)
+            }
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setView(imageView)
+            .setPositiveButton(R.string.action_close, null)
+            .show()
     }
 
     private fun observeViewModel() {

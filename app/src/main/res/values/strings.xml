@@ -23,7 +23,8 @@
 
     <!-- Companion Screen Strings -->
     <string name="prompt_default_greeting">\"Good morning! What should we get started on today?\"</string>
-    <string name="prompt_audio_subtitle">Tap quote or Paula for next • Spoken affirmation</string>
+    <string name="prompt_audio_subtitle">Tap quote to browse all • Tap Paula for random</string>
+    <string name="dialog_affirmations_title">Paula\'s Voice Affirmations</string>
     <string name="streak_banner_title">5-Day Habit Streak!</string>
     <string name="streak_banner_subtitle">Routines completed today • Nice and neat</string>
     <string name="action_play_greeting">Play Voice</string>
@@ -133,4 +134,8 @@
     <string name="dialog_add_profile_title">Create User Profile</string>
     <string name="hint_profile_name">e.g., Mom, Roman, Roommate</string>
     <string name="toast_profile_switched">Active profile: %1$s</string>
+    <string name="toast_profile_exists">Switched to existing profile: %1$s</string>
+    <string name="dialog_delete_profile_title">Delete Profile</string>
+    <string name="dialog_delete_profile_message">Delete \"%1$s\" and all of their tasks and habits? This cannot be undone.</string>
+    <string name="action_close">Close</string>
 </resources>

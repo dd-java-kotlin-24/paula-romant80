@@ -39,6 +39,13 @@ class TaskAdapter(
     private val onTaskChecked: (Task, Boolean) -> Unit
 ) : ListAdapter<Task, TaskAdapter.TaskViewHolder>(TaskDiffCallback) {
 
+    private var categoryNames: Map<Long, String> = emptyMap()
+
+    fun setCategories(categories: Map<Long, String>) {
+        categoryNames = categories
+        notifyDataSetChanged()
+    }
+
     private val dateFormatter = DateTimeFormatter
         .ofLocalizedDate(FormatStyle.MEDIUM)
         .withZone(ZoneId.systemDefault())
@@ -106,6 +113,15 @@ class TaskAdapter(
                 binding.priorityBadge.visibility = View.VISIBLE
             } else {
                 binding.priorityBadge.visibility = View.GONE
+            }
+
+            // Category Chip
+            val categoryName = task.categoryId?.let { categoryNames[it] }
+            if (!categoryName.isNullOrBlank()) {
+                binding.categoryChip.text = categoryName
+                binding.categoryChip.isVisible = true
+            } else {
+                binding.categoryChip.isVisible = false
             }
 
             // Photo Proof Indicator

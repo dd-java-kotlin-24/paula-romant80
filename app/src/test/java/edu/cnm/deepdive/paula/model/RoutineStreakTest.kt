@@ -1,38 +1,24 @@
 package edu.cnm.deepdive.paula.model
 
 import edu.cnm.deepdive.paula.model.entity.Routine
+import edu.cnm.deepdive.paula.service.RoutineRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 /**
- * Unit test suite verifying daily habit streak calculation and progression logic.
+ * Unit test suite verifying daily, weekday, and weekend habit streak calculation logic.
  */
 class RoutineStreakTest {
-
-    private fun calculateNextStreak(
-        currentStreak: Int,
-        bestStreak: Int,
-        lastCompletedDate: LocalDate?,
-        completedDate: LocalDate
-    ): Pair<Int, Int> {
-        val yesterday = completedDate.minusDays(1)
-        val newStreak = when (lastCompletedDate) {
-            yesterday -> currentStreak + 1
-            completedDate -> currentStreak
-            else -> 1
-        }
-        val newBest = maxOf(newStreak, bestStreak)
-        return Pair(newStreak, newBest)
-    }
 
     @Test
     fun firstCompletion_setsStreakToOne() {
         val routine = Routine(name = "Make Bed", userId = 1L)
         val today = LocalDate.of(2026, 11, 24)
 
-        val (newStreak, newBest) = calculateNextStreak(
+        val (newStreak, newBest) = RoutineRepository.calculateNextStreak(
+            routine.frequency,
             routine.currentStreak,
             routine.bestStreak,
             routine.lastCompletedDate,
@@ -55,7 +41,8 @@ class RoutineStreakTest {
             lastCompletedDate = yesterday
         )
 
-        val (newStreak, newBest) = calculateNextStreak(
+        val (newStreak, newBest) = RoutineRepository.calculateNextStreak(
+            routine.frequency,
             routine.currentStreak,
             routine.bestStreak,
             routine.lastCompletedDate,
@@ -77,7 +64,8 @@ class RoutineStreakTest {
             lastCompletedDate = today
         )
 
-        val (newStreak, newBest) = calculateNextStreak(
+        val (newStreak, newBest) = RoutineRepository.calculateNextStreak(
+            routine.frequency,
             routine.currentStreak,
             routine.bestStreak,
             routine.lastCompletedDate,
@@ -89,26 +77,78 @@ class RoutineStreakTest {
     }
 
     @Test
-    fun missedDay_resetsActiveStreak_preservesBestStreak() {
+    fun missedDay_daily_resetsActiveStreak_preservesBestStreak() {
         val twoDaysAgo = LocalDate.of(2026, 11, 22)
         val today = LocalDate.of(2026, 11, 24)
         val routine = Routine(
             name = "Evening Tidying",
             userId = 1L,
+            frequency = "DAILY",
             currentStreak = 10,
             bestStreak = 10,
             lastCompletedDate = twoDaysAgo
         )
 
-        val (newStreak, newBest) = calculateNextStreak(
+        val (newStreak, newBest) = RoutineRepository.calculateNextStreak(
+            routine.frequency,
             routine.currentStreak,
             routine.bestStreak,
             routine.lastCompletedDate,
             today
         )
 
-        assertEquals(1, newStreak, "Streak must reset to 1 after missing a day")
+        assertEquals(1, newStreak, "Daily streak must reset to 1 after missing a day")
         assertEquals(10, newBest, "Best streak record must be preserved")
+    }
+
+    @Test
+    fun weekdaysFrequency_fridayToMonday_preservesAndIncrementsStreak() {
+        val friday = LocalDate.of(2026, 11, 20) // Friday
+        val monday = LocalDate.of(2026, 11, 23) // Monday
+        val routine = Routine(
+            name = "Desk Tidy",
+            userId = 1L,
+            frequency = "WEEKDAYS",
+            currentStreak = 5,
+            bestStreak = 5,
+            lastCompletedDate = friday
+        )
+
+        val (newStreak, newBest) = RoutineRepository.calculateNextStreak(
+            routine.frequency,
+            routine.currentStreak,
+            routine.bestStreak,
+            routine.lastCompletedDate,
+            monday
+        )
+
+        assertEquals(6, newStreak, "Weekday habit must bridge Saturday and Sunday")
+        assertEquals(6, newBest)
+    }
+
+    @Test
+    fun weekendsFrequency_sundayToSaturday_preservesAndIncrementsStreak() {
+        val sunday = LocalDate.of(2026, 11, 15) // Sunday
+        val saturday = LocalDate.of(2026, 11, 21) // Next Saturday
+        val routine = Routine(
+            name = "Deep Clean Laundry",
+            userId = 1L,
+            frequency = "WEEKENDS",
+            currentStreak = 2,
+            bestStreak = 2,
+            lastCompletedDate = sunday
+        )
+
+        val (newStreak, newBest) = RoutineRepository.calculateNextStreak(
+            routine.frequency,
+            routine.currentStreak,
+            routine.bestStreak,
+            routine.lastCompletedDate,
+            saturday
+        )
+
+        assertEquals(3, newStreak, "Weekend habit must bridge Mon-Fri")
+        assertEquals(3, newBest)
     }
 
     @Test
@@ -123,7 +163,8 @@ class RoutineStreakTest {
             lastCompletedDate = yesterday
         )
 
-        val (newStreak, newBest) = calculateNextStreak(
+        val (newStreak, newBest) = RoutineRepository.calculateNextStreak(
+            routine.frequency,
             routine.currentStreak,
             routine.bestStreak,
             routine.lastCompletedDate,

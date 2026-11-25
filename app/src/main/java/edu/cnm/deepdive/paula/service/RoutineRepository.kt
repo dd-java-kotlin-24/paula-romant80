@@ -22,6 +22,7 @@ import edu.cnm.deepdive.paula.model.entity.RoutineLog
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 
@@ -92,13 +93,13 @@ class RoutineRepository @Inject constructor(
         )
         routineLogDao.insert(log)
 
-        val yesterday = completedDate.minusDays(1)
-        val newStreak = when (routine.lastCompletedDate) {
-            yesterday -> routine.currentStreak + 1
-            completedDate -> routine.currentStreak
-            else -> 1
-        }
-        val newBestStreak = maxOf(routine.bestStreak, newStreak)
+        val (newStreak, newBestStreak) = calculateNextStreak(
+            frequency = routine.frequency,
+            currentStreak = routine.currentStreak,
+            bestStreak = routine.bestStreak,
+            lastCompletedDate = routine.lastCompletedDate,
+            completedDate = completedDate
+        )
         val updated = routine.copy(
             currentStreak = newStreak,
             bestStreak = newBestStreak,
@@ -124,6 +125,48 @@ class RoutineRepository @Inject constructor(
             return updated
         }
         return routine
+    }
+
+    companion object {
+        fun calculateNextStreak(
+            frequency: String,
+            currentStreak: Int,
+            bestStreak: Int,
+            lastCompletedDate: LocalDate?,
+            completedDate: LocalDate
+        ): Pair<Int, Int> {
+            val newStreak = when {
+                lastCompletedDate == completedDate -> currentStreak
+                lastCompletedDate != null && isConsecutiveCompletion(frequency, lastCompletedDate, completedDate) ->
+                    currentStreak + 1
+                else -> 1
+            }
+            return Pair(newStreak, maxOf(bestStreak, newStreak))
+        }
+
+        private fun isConsecutiveCompletion(
+            frequency: String,
+            lastDate: LocalDate,
+            currentDate: LocalDate
+        ): Boolean {
+            if (!lastDate.isBefore(currentDate)) return false
+            var cursor = currentDate.minusDays(1)
+            return when (frequency.uppercase()) {
+                "WEEKDAYS" -> {
+                    while (cursor.dayOfWeek == DayOfWeek.SATURDAY || cursor.dayOfWeek == DayOfWeek.SUNDAY) {
+                        cursor = cursor.minusDays(1)
+                    }
+                    lastDate == cursor || lastDate == currentDate.minusDays(1)
+                }
+                "WEEKENDS" -> {
+                    while (cursor.dayOfWeek != DayOfWeek.SATURDAY && cursor.dayOfWeek != DayOfWeek.SUNDAY) {
+                        cursor = cursor.minusDays(1)
+                    }
+                    lastDate == cursor || lastDate == currentDate.minusDays(1)
+                }
+                else -> lastDate == cursor
+            }
+        }
     }
 
 }
