@@ -30,13 +30,8 @@ class ReminderReceiver : BroadcastReceiver() {
             return
         }
 
-        val quietHoursEnabled = prefs.getBoolean("quiet_hours_enabled", true)
-        if (quietHoursEnabled) {
-            val currentHour = LocalTime.now().hour
-            // Quiet hours window: 10:00 PM (22:00) to 7:00 AM (07:00)
-            if (currentHour >= 22 || currentHour < 7) {
-                return
-            }
+        if (QuietHoursHelper.isQuietHoursActive(context)) {
+            return
         }
 
         val routineId = intent.getLongExtra(EXTRA_ROUTINE_ID, 0L)

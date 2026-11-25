@@ -38,7 +38,7 @@
     <string name="streak_icon_content_description">Streak progress icon</string>
     <string name="status_playing_voice">Playing spoken affirmation…</string>
     <string name="status_playing_video">Playing companion video…</string>
-    <string name="status_quiet_hours">Quiet Hours active (10 PM – 7 AM) • Voice muted</string>
+    <string name="status_quiet_hours">Quiet Hours active • Voice muted</string>
     <string name="status_voice_disabled">Voice affirmations disabled in Settings</string>
     <string name="streak_habits_completed">%1$d of %2$d routines completed today • Keep it up!</string>
     <string name="streak_habits_zero">No routines completed today • Ready to start?</string>
@@ -57,8 +57,10 @@
     <string name="pref_category_reminders">Reminders &amp; Schedule</string>
     <string name="pref_reminders_title">Habit Notifications</string>
     <string name="pref_reminders_summary">Receive scheduled notifications for daily routines</string>
-    <string name="pref_quiet_hours_title">Quiet Hours (10 PM – 7 AM)</string>
+    <string name="pref_quiet_hours_title">Quiet Hours</string>
     <string name="pref_quiet_hours_summary">Silence audio voice prompts during rest hours</string>
+    <string name="pref_quiet_hours_start_title">Quiet Hours Start</string>
+    <string name="pref_quiet_hours_end_title">Quiet Hours End</string>
 
     <!-- Task List & Card Strings -->
     <string name="filter_all">All</string>

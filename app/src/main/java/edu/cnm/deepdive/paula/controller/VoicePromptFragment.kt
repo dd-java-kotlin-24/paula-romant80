@@ -217,12 +217,8 @@ class VoicePromptFragment : Fragment() {
         }
     }
 
-    private fun isQuietHoursActive(): Boolean {
-        val quietHoursEnabled = sharedPreferences.getBoolean("quiet_hours_enabled", true)
-        if (!quietHoursEnabled) return false
-        val now = LocalTime.now()
-        return now.isAfter(LocalTime.of(21, 59)) || now.isBefore(LocalTime.of(7, 0))
-    }
+    private fun isQuietHoursActive(): Boolean =
+        edu.cnm.deepdive.paula.service.QuietHoursHelper.isQuietHoursActive(requireContext())
 
     private fun playAudio(prompt: VoicePrompt) {
         if (isVideoPlaying) {

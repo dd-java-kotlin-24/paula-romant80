@@ -43,6 +43,16 @@
             app:summary="@string/pref_quiet_hours_summary"
             app:defaultValue="true" />
 
+        <Preference
+            app:key="quiet_hours_start"
+            app:title="@string/pref_quiet_hours_start_title"
+            app:dependency="quiet_hours_enabled" />
+
+        <Preference
+            app:key="quiet_hours_end"
+            app:title="@string/pref_quiet_hours_end_title"
+            app:dependency="quiet_hours_enabled" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>
