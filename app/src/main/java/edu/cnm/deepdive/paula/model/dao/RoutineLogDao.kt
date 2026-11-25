@@ -31,6 +31,9 @@ interface RoutineLogDao {
     @Query("SELECT * FROM routine_log WHERE routine_id = :routineId AND completed_date = :completedDate")
     suspend fun findByRoutineAndDate(routineId: Long, completedDate: LocalDate): RoutineLog?
 
+    @Query("SELECT * FROM routine_log WHERE routine_id = :routineId ORDER BY completed_date DESC LIMIT 1")
+    suspend fun findLatestForRoutine(routineId: Long): RoutineLog?
+
     @Query("SELECT * FROM routine_log ORDER BY completed_at DESC")
     fun selectRecent(): Flow<List<RoutineLog>>
 

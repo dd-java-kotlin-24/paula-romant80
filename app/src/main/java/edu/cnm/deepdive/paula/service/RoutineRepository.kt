@@ -117,9 +117,10 @@ class RoutineRepository @Inject constructor(
         if (existingLog != null) {
             routineLogDao.delete(existingLog)
             val newStreak = (routine.currentStreak - 1).coerceAtLeast(0)
+            val previousLog = routineLogDao.findLatestForRoutine(routine.id)
             val updated = routine.copy(
                 currentStreak = newStreak,
-                lastCompletedDate = if (newStreak > 0) completedDate.minusDays(1) else null
+                lastCompletedDate = if (newStreak > 0) previousLog?.completedDate else null
             )
             routineDao.update(updated)
             return updated

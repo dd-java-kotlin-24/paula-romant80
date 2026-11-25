@@ -303,6 +303,11 @@ class VoicePromptFragment : Fragment() {
         binding.avatarVideo.setOnCompletionListener {
             onVideoComplete()
         }
+        binding.avatarVideo.setOnErrorListener { _, _, _ ->
+            stopVideo()
+            Toast.makeText(requireContext(), R.string.error_audio_playback, Toast.LENGTH_SHORT).show()
+            true
+        }
         binding.avatarVideo.start()
 
         isVideoPlaying = true

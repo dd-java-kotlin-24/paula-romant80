@@ -114,8 +114,43 @@ class TaskEditFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupInitialMode()
+        if (savedInstanceState != null) {
+            restoreDraftState(savedInstanceState)
+        }
         setupListeners()
         observeViewModel()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_ATTACHED_PHOTO_URI, attachedPhotoUri?.toString())
+        outState.putString(STATE_PENDING_CAMERA_URI, pendingCameraUri?.toString())
+        selectedDueDate?.let { outState.putLong(STATE_DUE_DATE_MILLIS, it.toEpochMilli()) }
+        selectedCategoryId?.let { outState.putLong(STATE_CATEGORY_ID, it) }
+    }
+
+    private fun restoreDraftState(savedState: Bundle) {
+        savedState.getString(STATE_ATTACHED_PHOTO_URI)?.let { uriStr ->
+            attachedPhotoUri = Uri.parse(uriStr)
+            showAttachedPhoto(attachedPhotoUri)
+        }
+        savedState.getString(STATE_PENDING_CAMERA_URI)?.let { uriStr ->
+            pendingCameraUri = Uri.parse(uriStr)
+        }
+        if (savedState.containsKey(STATE_DUE_DATE_MILLIS)) {
+            selectedDueDate = Instant.ofEpochMilli(savedState.getLong(STATE_DUE_DATE_MILLIS))
+            binding.dueDateInput.setText(dateFormatter.format(selectedDueDate))
+        }
+        if (savedState.containsKey(STATE_CATEGORY_ID)) {
+            selectedCategoryId = savedState.getLong(STATE_CATEGORY_ID)
+        }
+    }
+
+    companion object {
+        private const val STATE_ATTACHED_PHOTO_URI = "attached_photo_uri"
+        private const val STATE_PENDING_CAMERA_URI = "pending_camera_uri"
+        private const val STATE_DUE_DATE_MILLIS = "due_date_millis"
+        private const val STATE_CATEGORY_ID = "category_id"
     }
 
     private fun setupInitialMode() {

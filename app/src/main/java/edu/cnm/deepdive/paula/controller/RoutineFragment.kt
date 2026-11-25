@@ -277,6 +277,16 @@ class RoutineFragment : Fragment() {
             setIconResource(R.drawable.ic_calendar_today)
         }
 
+        val clearTimeButton = MaterialButton(context, null, android.R.attr.borderlessButtonStyle).apply {
+            text = getString(R.string.action_clear_reminder)
+            isVisible = selectedTime != null
+            setOnClickListener {
+                selectedTime = null
+                timeButton.text = getString(R.string.hint_set_reminder)
+                isVisible = false
+            }
+        }
+
         timeButton.setOnClickListener {
             val initialHour = selectedTime?.split(":")?.getOrNull(0)?.toIntOrNull() ?: 8
             val initialMinute = selectedTime?.split(":")?.getOrNull(1)?.toIntOrNull() ?: 0
@@ -291,6 +301,7 @@ class RoutineFragment : Fragment() {
                 val formatted = String.format(Locale.getDefault(), "%02d:%02d", picker.hour, picker.minute)
                 selectedTime = formatted
                 timeButton.text = getString(R.string.label_reminder_time) + ": " + formatted
+                clearTimeButton.isVisible = true
             }
             picker.show(parentFragmentManager, "routine_time_picker")
         }
@@ -304,6 +315,7 @@ class RoutineFragment : Fragment() {
             addView(descriptionInput)
             addView(frequencyGroup)
             addView(timeButton)
+            addView(clearTimeButton)
         }
 
         val builder = MaterialAlertDialogBuilder(context)
