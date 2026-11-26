@@ -83,10 +83,32 @@ class VoicePromptViewModel @Inject constructor(
         }
     }
 
+    fun getTimeOfDayPrompt(
+        prompts: List<VoicePrompt>,
+        time: java.time.LocalTime = java.time.LocalTime.now()
+    ): VoicePrompt? {
+        if (prompts.isEmpty()) return null
+        val isMorning = !time.isBefore(java.time.LocalTime.of(5, 0)) && time.isBefore(java.time.LocalTime.of(12, 0))
+        val isNight = !time.isBefore(java.time.LocalTime.of(20, 0)) || time.isBefore(java.time.LocalTime.of(5, 0))
+
+        val targetTrigger = when {
+            isMorning -> "GREETING"
+            isNight -> "GOODNIGHT"
+            else -> "READY_WHEN_YOU_ARE"
+        }
+
+        return prompts.find { it.triggerEvent.equals(targetTrigger, ignoreCase = true) }
+            ?: prompts.find { it.triggerEvent.equals("GREETING", ignoreCase = true) }
+            ?: prompts.firstOrNull()
+    }
+
     fun getAudioResourceId(prompt: VoicePrompt): Int =
         voicePromptRepository.getAudioResourceId(prompt.audioFileName)
 
     fun getVideoResourceId(prompt: VoicePrompt): Int =
         voicePromptRepository.getVideoResourceId(prompt.triggerEvent)
+
+    fun getStillImageResourceId(prompt: VoicePrompt): Int =
+        voicePromptRepository.getStillImageResourceId(prompt.triggerEvent)
 
 }

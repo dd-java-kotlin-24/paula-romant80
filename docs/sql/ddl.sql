@@ -1,4 +1,4 @@
--- Generated 2026-11-24 16:32:12-0700 for database version 1
+-- Generated 2026-11-25 12:45:09-0700 for database version 1
 
 CREATE TABLE IF NOT EXISTS `user_profile` (`user_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `oauth_key` TEXT NOT NULL, `display_name` TEXT NOT NULL, `created_at` INTEGER NOT NULL);
 
@@ -22,7 +22,7 @@ CREATE INDEX IF NOT EXISTS `index_task_voice_prompt_id` ON `task` (`voice_prompt
 
 CREATE INDEX IF NOT EXISTS `index_task_is_completed_due_date` ON `task` (`is_completed`, `due_date`);
 
-CREATE TABLE IF NOT EXISTS `routine` (`routine_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `user_id` INTEGER NOT NULL, `category_id` INTEGER, `voice_prompt_id` INTEGER, `name` TEXT NOT NULL, `description` TEXT, `frequency` TEXT NOT NULL, `reminder_time` TEXT, `current_streak` INTEGER NOT NULL, `best_streak` INTEGER NOT NULL, `is_active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `last_completed_date` INTEGER, FOREIGN KEY(`user_id`) REFERENCES `user_profile`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`category_id`) REFERENCES `category`(`category_id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`voice_prompt_id`) REFERENCES `voice_prompt`(`prompt_id`) ON UPDATE NO ACTION ON DELETE SET NULL );
+CREATE TABLE IF NOT EXISTS `routine` (`routine_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `user_id` INTEGER NOT NULL, `category_id` INTEGER, `voice_prompt_id` INTEGER, `name` TEXT NOT NULL, `description` TEXT, `frequency` TEXT NOT NULL, `reminder_time` TEXT, `current_streak` INTEGER NOT NULL, `best_streak` INTEGER NOT NULL, `is_active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `last_completed_date` INTEGER, `photo_uri` TEXT, FOREIGN KEY(`user_id`) REFERENCES `user_profile`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`category_id`) REFERENCES `category`(`category_id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`voice_prompt_id`) REFERENCES `voice_prompt`(`prompt_id`) ON UPDATE NO ACTION ON DELETE SET NULL );
 
 CREATE INDEX IF NOT EXISTS `index_routine_user_id` ON `routine` (`user_id`);
 

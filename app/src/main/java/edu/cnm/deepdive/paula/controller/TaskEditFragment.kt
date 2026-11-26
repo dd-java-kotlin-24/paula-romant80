@@ -91,8 +91,8 @@ class TaskEditFragment : DialogFragment() {
         }
     }
 
-    private val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-        .withZone(ZoneId.of("UTC"))
+    private val dateFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
+        .withZone(ZoneId.systemDefault())
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -191,10 +191,17 @@ class TaskEditFragment : DialogFragment() {
         }
 
         binding.categorySelector.setOnItemClickListener { _, _, position, _ ->
-            selectedCategoryId = if (position == 0) {
-                null
+            if (position == availableCategories.size + 1) {
+                val currentLabel = availableCategories.find { it.id == selectedCategoryId }?.name
+                    ?: getString(R.string.category_none)
+                binding.categorySelector.setText(currentLabel, false)
+                showCreateCategoryDialog()
             } else {
-                availableCategories.getOrNull(position - 1)?.id
+                selectedCategoryId = if (position == 0) {
+                    null
+                } else {
+                    availableCategories.getOrNull(position - 1)?.id
+                }
             }
         }
 
@@ -267,6 +274,7 @@ class TaskEditFragment : DialogFragment() {
     private fun setupCategoryDropdown() {
         val categoryNames = mutableListOf(getString(R.string.category_none))
         categoryNames.addAll(availableCategories.map { it.name })
+        categoryNames.add(getString(R.string.category_add_new))
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, categoryNames)
         binding.categorySelector.setAdapter(adapter)
 
@@ -278,6 +286,33 @@ class TaskEditFragment : DialogFragment() {
                 binding.categorySelector.setText(matchingCat.name, false)
             }
         }
+    }
+
+    private fun showCreateCategoryDialog() {
+        val input = android.widget.EditText(requireContext()).apply {
+            hint = getString(R.string.hint_category_name)
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        }
+        val padPx = (24 * resources.displayMetrics.density).toInt()
+        val container = android.widget.FrameLayout(requireContext()).apply {
+            setPadding(padPx, padPx / 2, padPx, 0)
+            addView(input)
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.title_new_category)
+            .setView(container)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val name = input.text.toString().trim()
+                if (name.isNotEmpty()) {
+                    taskViewModel.createCategory(name) { created ->
+                        selectedCategoryId = created.id
+                        binding.categorySelector.setText(created.name, false)
+                    }
+                }
+            }
+            .show()
     }
 
     private fun populateFields(task: Task) {
@@ -418,8 +453,29 @@ class TaskEditFragment : DialogFragment() {
             .build()
 
         picker.addOnPositiveButtonClickListener { epochMilli ->
-            selectedDueDate = Instant.ofEpochMilli(epochMilli)
-            binding.dueDateInput.setText(dateFormatter.format(selectedDueDate))
+            val pickedDate = Instant.ofEpochMilli(epochMilli)
+                .atZone(java.time.ZoneOffset.UTC)
+                .toLocalDate()
+            val existingTime = selectedDueDate
+                ?.atZone(ZoneId.systemDefault())
+                ?.toLocalTime()
+                ?: java.time.LocalTime.of(12, 0)
+            val is24Hour = android.text.format.DateFormat.is24HourFormat(requireContext())
+            val timePicker = com.google.android.material.timepicker.MaterialTimePicker.Builder()
+                .setTimeFormat(
+                    if (is24Hour) com.google.android.material.timepicker.TimeFormat.CLOCK_24H
+                    else com.google.android.material.timepicker.TimeFormat.CLOCK_12H
+                )
+                .setHour(existingTime.hour)
+                .setMinute(existingTime.minute)
+                .setTitleText(R.string.label_due_date)
+                .build()
+            timePicker.addOnPositiveButtonClickListener {
+                val localDateTime = pickedDate.atTime(timePicker.hour, timePicker.minute)
+                selectedDueDate = localDateTime.atZone(ZoneId.systemDefault()).toInstant()
+                binding.dueDateInput.setText(dateFormatter.format(selectedDueDate))
+            }
+            timePicker.show(parentFragmentManager, "task_due_time_picker")
         }
 
         picker.show(parentFragmentManager, "task_due_date_picker")

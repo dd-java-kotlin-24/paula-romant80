@@ -39,6 +39,8 @@ import edu.cnm.deepdive.paula.R
 import edu.cnm.deepdive.paula.adapter.TaskAdapter
 import edu.cnm.deepdive.paula.databinding.FragmentTaskBinding
 import edu.cnm.deepdive.paula.model.entity.Task
+import edu.cnm.deepdive.paula.service.CelebrationManager
+import edu.cnm.deepdive.paula.service.VoiceCelebrationHelper
 import edu.cnm.deepdive.paula.viewmodel.TaskViewModel
 import edu.cnm.deepdive.paula.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
@@ -87,8 +89,11 @@ class TaskFragment : Fragment() {
                 }
                 findNavController().navigate(action)
             },
-            onTaskChecked = { task, _ ->
+            onTaskChecked = { task, isChecked ->
                 taskViewModel.toggleComplete(task)
+                if (isChecked) {
+                    CelebrationManager.celebrateTaskCompletion(this@TaskFragment, task, taskAdapter.currentList)
+                }
             }
         )
         binding.tasksRecyclerView.adapter = taskAdapter
@@ -113,9 +118,13 @@ class TaskFragment : Fragment() {
                 val task = taskAdapter.currentList.getOrNull(position) ?: return
 
                 if (direction == ItemTouchHelper.RIGHT) {
+                    val willBeCompleted = !task.isCompleted
                     taskViewModel.toggleComplete(task)
                     taskAdapter.notifyItemChanged(position)
-                    val messageRes = if (!task.isCompleted) {
+                    if (willBeCompleted) {
+                        CelebrationManager.celebrateTaskCompletion(this@TaskFragment, task, taskAdapter.currentList)
+                    }
+                    val messageRes = if (willBeCompleted) {
                         R.string.snackbar_task_completed
                     } else {
                         R.string.snackbar_task_pending
@@ -253,8 +262,14 @@ class TaskFragment : Fragment() {
         binding.emptyStateContainer.isVisible = filtered.isEmpty()
     }
 
+    override fun onStop() {
+        super.onStop()
+        VoiceCelebrationHelper.stop()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        VoiceCelebrationHelper.stop()
         _binding = null
     }
 

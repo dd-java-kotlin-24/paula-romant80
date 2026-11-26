@@ -57,6 +57,43 @@ class MainActivity : AppCompatActivity() {
         setupLayout()
         setupNavigation()
         observeCurrentUser()
+        if (savedInstanceState == null) {
+            triggerDailyWelcomeGreeting()
+        }
+    }
+
+    private fun triggerDailyWelcomeGreeting() {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        val welcomeEnabled = prefs.getBoolean("daily_welcome_enabled", true)
+        val voiceEnabled = prefs.getBoolean("voice_enabled", true)
+        if (!welcomeEnabled || !voiceEnabled || edu.cnm.deepdive.paula.service.QuietHoursHelper.isQuietHoursActive(this)) {
+            return
+        }
+
+        val now = java.time.LocalTime.now()
+        val today = java.time.LocalDate.now().toString()
+
+        val isMorning = !now.isBefore(java.time.LocalTime.of(5, 0)) && now.isBefore(java.time.LocalTime.of(12, 0))
+        val isNight = !now.isBefore(java.time.LocalTime.of(20, 0)) || now.isBefore(java.time.LocalTime.of(5, 0))
+
+        if (isMorning) {
+            val lastMorningDate = prefs.getString("last_morning_welcome_date", null)
+            if (lastMorningDate != today) {
+                prefs.edit().putString("last_morning_welcome_date", today).apply()
+                edu.cnm.deepdive.paula.service.VoiceCelebrationHelper.playSingle(this, R.raw.paula_companion_greeting)
+            }
+        } else if (isNight) {
+            val lastNightDate = prefs.getString("last_night_welcome_date", null)
+            if (lastNightDate != today) {
+                prefs.edit().putString("last_night_welcome_date", today).apply()
+                edu.cnm.deepdive.paula.service.VoiceCelebrationHelper.playSingle(this, R.raw.paula_goodnight)
+            }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        edu.cnm.deepdive.paula.service.VoiceCelebrationHelper.stop()
     }
 
     private fun requestNotificationPermission() {
@@ -103,7 +140,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 userViewModel.currentUser.collect { user ->
-                    binding.toolbar.subtitle = user?.displayName
+                    binding.toolbar.subtitle = getString(R.string.app_tagline)
+                    binding.toolbar.menu.findItem(R.id.action_switch_profile)?.tooltipText = user?.displayName
                     if (user != null) {
                         prefs.edit()
                             .putString(PREF_ACTIVE_OAUTH_KEY, user.oauthKey)

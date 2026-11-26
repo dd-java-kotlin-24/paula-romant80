@@ -164,8 +164,9 @@ class VoicePromptFragment : Fragment() {
                 launch {
                     voicePromptViewModel.prompts.collect { prompts ->
                         if (activePrompt == null && prompts.isNotEmpty()) {
-                            activePrompt = prompts.first()
-                            updatePromptDisplay(prompts.first())
+                            val defaultPrompt = voicePromptViewModel.getTimeOfDayPrompt(prompts) ?: prompts.first()
+                            activePrompt = defaultPrompt
+                            updatePromptDisplay(defaultPrompt)
                         }
                     }
                 }
@@ -193,6 +194,8 @@ class VoicePromptFragment : Fragment() {
 
     private fun updatePromptDisplay(prompt: VoicePrompt) {
         binding.textSpeechBubble.text = "\"${prompt.transcript}\""
+        val stillResId = voicePromptViewModel.getStillImageResourceId(prompt)
+        binding.avatarImage.setImageResource(stillResId)
         if (!isAudioPlaying && !isVideoPlaying) {
             binding.textAudioStatus.setText(R.string.prompt_audio_subtitle)
         }
@@ -221,21 +224,11 @@ class VoicePromptFragment : Fragment() {
         edu.cnm.deepdive.paula.service.QuietHoursHelper.isQuietHoursActive(requireContext())
 
     private fun playAudio(prompt: VoicePrompt) {
+        edu.cnm.deepdive.paula.service.VoiceCelebrationHelper.stop()
         if (isVideoPlaying) {
             stopVideo()
         }
         stopAudio()
-
-        val voiceEnabled = sharedPreferences.getBoolean("voice_enabled", true)
-        if (!voiceEnabled) {
-            binding.textAudioStatus.setText(R.string.status_voice_disabled)
-            return
-        }
-
-        if (isQuietHoursActive()) {
-            binding.textAudioStatus.setText(R.string.status_quiet_hours)
-            return
-        }
 
         val rawResId = voicePromptViewModel.getAudioResourceId(prompt)
         val player = MediaPlayer.create(requireContext(), rawResId)
@@ -243,6 +236,12 @@ class VoicePromptFragment : Fragment() {
             Toast.makeText(requireContext(), R.string.error_audio_playback, Toast.LENGTH_SHORT).show()
             return
         }
+        player.setAudioAttributes(
+            android.media.AudioAttributes.Builder()
+                .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+        )
         mediaPlayer = player.apply {
             setOnCompletionListener {
                 onAudioComplete()
@@ -280,15 +279,11 @@ class VoicePromptFragment : Fragment() {
     }
 
     private fun playVideo(prompt: VoicePrompt) {
+        edu.cnm.deepdive.paula.service.VoiceCelebrationHelper.stop()
         if (isAudioPlaying) {
             stopAudio()
         }
         stopVideo()
-
-        if (isQuietHoursActive()) {
-            binding.textAudioStatus.setText(R.string.status_quiet_hours)
-            return
-        }
 
         val rawVideoId = voicePromptViewModel.getVideoResourceId(prompt)
         val uri = Uri.parse("android.resource://${requireContext().packageName}/$rawVideoId")
@@ -318,6 +313,9 @@ class VoicePromptFragment : Fragment() {
             binding.avatarVideo.stopPlayback()
         }
         binding.avatarVideo.isVisible = false
+        activePrompt?.let { prompt ->
+            binding.avatarImage.setImageResource(voicePromptViewModel.getStillImageResourceId(prompt))
+        }
         binding.avatarImage.isVisible = true
         isVideoPlaying = false
         binding.buttonTutorial.setText(R.string.action_watch_tutorial)

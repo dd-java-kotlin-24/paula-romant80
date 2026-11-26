@@ -67,82 +67,83 @@ class VoicePromptRepository @Inject constructor(
             VoicePrompt(
                 triggerEvent = "GREETING",
                 title = "Morning Greeting",
-                transcript = "Good morning! What should we get started on today?",
+                transcript = "Good morning. Ready when you are. Let's tackle today's routines together, one step at a time.",
                 audioFileName = "paula_companion_greeting",
-                isAuthentic = true
-            ),
-            VoicePrompt(
-                triggerEvent = "GOOD_MORNING",
-                title = "Good Morning",
-                transcript = "Good morning! Let's make today productive and organized.",
-                audioFileName = "paula_good_morning",
                 isAuthentic = true
             ),
             VoicePrompt(
                 triggerEvent = "AWESOME_JOB",
                 title = "Awesome Job",
-                transcript = "Awesome job! You are making great progress.",
+                transcript = "Awesome job checking that off.",
                 audioFileName = "paula_awesome_job",
                 isAuthentic = true
             ),
             VoicePrompt(
                 triggerEvent = "PROUD_OF_YOU",
                 title = "Proud of You",
-                transcript = "I am so proud of you. Keep up the good work!",
+                transcript = "Look at that. Everything is done. So proud of you.",
                 audioFileName = "paula_proud_of_you",
                 isAuthentic = true
             ),
             VoicePrompt(
                 triggerEvent = "NICE_AND_NEAT",
                 title = "Nice and Neat",
-                transcript = "Nice and neat, everything in its place.",
+                transcript = "Let's keep our living space nice and neat.",
                 audioFileName = "paula_nice_and_neat",
                 isAuthentic = true
             ),
             VoicePrompt(
                 triggerEvent = "CLEAR_SPACE",
                 title = "Clear Space",
-                transcript = "Clear space, clear mind. Let's do this together.",
+                transcript = "A clear space gives you a clear mind.",
                 audioFileName = "paula_clear_space",
                 isAuthentic = true
             ),
             VoicePrompt(
                 triggerEvent = "ONE_STEP",
                 title = "One Step at a Time",
-                transcript = "One step at a time. You've got this!",
+                transcript = "One step at a time. You're doing great.",
                 audioFileName = "paula_one_step_at_a_time",
                 isAuthentic = true
             ),
             VoicePrompt(
                 triggerEvent = "STREAK_ROLL",
                 title = "On a Roll",
-                transcript = "Look at you on a roll! Keep that habit streak going!",
+                transcript = "You're on a roll. Keep that streak going.",
                 audioFileName = "paula_on_a_roll",
                 isAuthentic = true
             ),
             VoicePrompt(
                 triggerEvent = "READY_WHEN_YOU_ARE",
                 title = "Ready When You Are",
-                transcript = "Ready when you are!",
+                transcript = "Ready when you are. Let's tackle this together.",
                 audioFileName = "paula_ready_when_you_are",
                 isAuthentic = true
             ),
             VoicePrompt(
                 triggerEvent = "GOODNIGHT",
                 title = "Goodnight",
-                transcript = "Rest up, you did wonderful today. Goodnight!",
+                transcript = "Time to relax and wind down. Good night!",
                 audioFileName = "paula_goodnight",
-                isAuthentic = true
-            ),
-            VoicePrompt(
-                triggerEvent = "MEMORIAL_TRIBUTE",
-                title = "Memorial Tribute",
-                transcript = "In loving memory of Paula Elizabeth Kleczka.",
-                audioFileName = "paula_memorial_tribute",
                 isAuthentic = true
             )
         )
-        voicePromptDao.insert(*defaults.toTypedArray())
+        voicePromptDao.findByTrigger("MEMORIAL_TRIBUTE")?.let {
+            voicePromptDao.delete(it)
+        }
+        voicePromptDao.findByTrigger("GOOD_MORNING")?.let {
+            voicePromptDao.delete(it)
+        }
+        defaults.forEach { defaultPrompt ->
+            val existing = voicePromptDao.findByTrigger(defaultPrompt.triggerEvent)
+            if (existing != null) {
+                if (existing.transcript != defaultPrompt.transcript || existing.title != defaultPrompt.title) {
+                    voicePromptDao.update(existing.copy(transcript = defaultPrompt.transcript, title = defaultPrompt.title))
+                }
+            } else {
+                voicePromptDao.insert(defaultPrompt)
+            }
+        }
         return defaults
     }
 
@@ -166,6 +167,23 @@ class VoicePromptRepository @Inject constructor(
         }
         val resId = context.resources.getIdentifier(resName, "raw", context.packageName)
         return if (resId != 0) resId else R.raw.paula_video_good_morning
+    }
+
+    fun getStillImageResourceId(triggerEvent: String): Int {
+        val resName = when (triggerEvent.uppercase()) {
+            "GREETING", "GOOD_MORNING" -> "paula_still_good_morning"
+            "AWESOME_JOB" -> "paula_still_awesome_job"
+            "PROUD_OF_YOU" -> "paula_still_proud_of_you"
+            "NICE_AND_NEAT" -> "paula_still_nice_and_neat"
+            "CLEAR_SPACE" -> "paula_still_clear_space"
+            "ONE_STEP" -> "paula_still_one_step_at_a_time"
+            "STREAK_ROLL" -> "paula_still_streak_on_a_roll"
+            "READY_WHEN_YOU_ARE" -> "paula_still_ready_when_you_are"
+            "GOODNIGHT" -> "paula_still_goodnight"
+            else -> "paula_still_good_morning"
+        }
+        val resId = context.resources.getIdentifier(resName, "drawable", context.packageName)
+        return if (resId != 0) resId else R.drawable.paula_avatar_purple_hoodie
     }
 
 }

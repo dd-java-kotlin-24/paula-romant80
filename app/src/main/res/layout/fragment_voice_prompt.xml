@@ -24,7 +24,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/card_speech_bubble"
+        app:layout_constraintBottom_toTopOf="@id/text_app_tagline"
         app:layout_constraintVertical_chainStyle="spread_inside">
 
         <FrameLayout
@@ -49,16 +49,34 @@
 
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- 1b. App Tagline directly below Paula Avatar Card -->
+    <TextView
+        android:id="@+id/text_app_tagline"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
+        android:text="@string/app_tagline"
+        android:textAlignment="center"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorPrimary"
+        android:textStyle="bold|italic"
+        android:letterSpacing="0.02"
+        app:layout_constraintTop_toBottomOf="@id/avatar_card"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/card_speech_bubble" />
+
     <!-- 2. Speech Bubble & Affirmation Caption Card -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_speech_bubble"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="2dp"
         app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
-        app:layout_constraintTop_toBottomOf="@id/avatar_card"
+        app:layout_constraintTop_toBottomOf="@id/text_app_tagline"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/card_streak_status">

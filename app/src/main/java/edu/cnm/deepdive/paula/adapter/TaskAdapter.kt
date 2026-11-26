@@ -47,7 +47,7 @@ class TaskAdapter(
     }
 
     private val dateFormatter = DateTimeFormatter
-        .ofLocalizedDate(FormatStyle.MEDIUM)
+        .ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
         .withZone(ZoneId.systemDefault())
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {

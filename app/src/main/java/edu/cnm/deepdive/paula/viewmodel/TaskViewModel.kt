@@ -121,4 +121,19 @@ class TaskViewModel @Inject constructor(
         }
     }
 
+    fun createCategory(name: String, onCreated: (Category) -> Unit) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            try {
+                val saved = categoryRepository.save(
+                    Category(name = trimmed, colorHex = "#6750A4")
+                )
+                onCreated(saved)
+            } catch (e: Throwable) {
+                _throwable.postValue(e)
+            }
+        }
+    }
+
 }

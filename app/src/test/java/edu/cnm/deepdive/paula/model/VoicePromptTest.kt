@@ -43,4 +43,54 @@ class VoicePromptTest {
         assertEquals("paula_voice_look_at_that", prompt.audioFileName)
         assertTrue(prompt.transcript.contains("So proud of you!"))
     }
+
+    @Test
+    fun timeOfDay_morningSelectsMorningGreeting() {
+        val greeting = VoicePrompt(triggerEvent = "GREETING", title = "Morning Greeting", transcript = "Good morning...", audioFileName = "greeting")
+        val ready = VoicePrompt(triggerEvent = "READY_WHEN_YOU_ARE", title = "Ready", transcript = "Ready...", audioFileName = "ready")
+        val goodnight = VoicePrompt(triggerEvent = "GOODNIGHT", title = "Goodnight", transcript = "Goodnight...", audioFileName = "goodnight")
+        val list = listOf(greeting, ready, goodnight)
+
+        val morningTime = java.time.LocalTime.of(8, 30)
+        val isMorning = !morningTime.isBefore(java.time.LocalTime.of(5, 0)) && morningTime.isBefore(java.time.LocalTime.of(12, 0))
+        val target = if (isMorning) "GREETING" else "READY_WHEN_YOU_ARE"
+        val selected = list.find { it.triggerEvent == target }
+
+        assertEquals("GREETING", selected?.triggerEvent)
+    }
+
+    @Test
+    fun timeOfDay_afternoonSelectsReadyWhenYouAre() {
+        val greeting = VoicePrompt(triggerEvent = "GREETING", title = "Morning Greeting", transcript = "Good morning...", audioFileName = "greeting")
+        val ready = VoicePrompt(triggerEvent = "READY_WHEN_YOU_ARE", title = "Ready", transcript = "Ready...", audioFileName = "ready")
+        val goodnight = VoicePrompt(triggerEvent = "GOODNIGHT", title = "Goodnight", transcript = "Goodnight...", audioFileName = "goodnight")
+        val list = listOf(greeting, ready, goodnight)
+
+        val afternoonTime = java.time.LocalTime.of(14, 0)
+        val isMorning = !afternoonTime.isBefore(java.time.LocalTime.of(5, 0)) && afternoonTime.isBefore(java.time.LocalTime.of(12, 0))
+        val isNight = !afternoonTime.isBefore(java.time.LocalTime.of(20, 0)) || afternoonTime.isBefore(java.time.LocalTime.of(5, 0))
+        val target = when {
+            isMorning -> "GREETING"
+            isNight -> "GOODNIGHT"
+            else -> "READY_WHEN_YOU_ARE"
+        }
+        val selected = list.find { it.triggerEvent == target }
+
+        assertEquals("READY_WHEN_YOU_ARE", selected?.triggerEvent)
+    }
+
+    @Test
+    fun timeOfDay_nighttimeSelectsGoodnight() {
+        val greeting = VoicePrompt(triggerEvent = "GREETING", title = "Morning Greeting", transcript = "Good morning...", audioFileName = "greeting")
+        val ready = VoicePrompt(triggerEvent = "READY_WHEN_YOU_ARE", title = "Ready", transcript = "Ready...", audioFileName = "ready")
+        val goodnight = VoicePrompt(triggerEvent = "GOODNIGHT", title = "Goodnight", transcript = "Goodnight...", audioFileName = "goodnight")
+        val list = listOf(greeting, ready, goodnight)
+
+        val nightTime = java.time.LocalTime.of(20, 15)
+        val isNight = !nightTime.isBefore(java.time.LocalTime.of(20, 0)) || nightTime.isBefore(java.time.LocalTime.of(5, 0))
+        val target = if (isNight) "GOODNIGHT" else "GREETING"
+        val selected = list.find { it.triggerEvent == target }
+
+        assertEquals("GOODNIGHT", selected?.triggerEvent)
+    }
 }

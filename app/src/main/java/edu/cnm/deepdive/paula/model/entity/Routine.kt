@@ -72,5 +72,8 @@ data class Routine(
     val createdAt: Instant = Instant.now(),
 
     @ColumnInfo(name = "last_completed_date")
-    val lastCompletedDate: LocalDate? = null
+    val lastCompletedDate: LocalDate? = null,
+
+    @ColumnInfo(name = "photo_uri")
+    val photoUri: String? = null
 )

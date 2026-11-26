@@ -76,7 +76,12 @@ class RoutineAdapter(
             }
 
             // Frequency
-            binding.frequencyBadge.text = routine.frequency.lowercase().replaceFirstChar { it.uppercase() }
+            binding.frequencyBadge.text = when (routine.frequency.uppercase()) {
+                "DAILY" -> context.getString(R.string.frequency_daily)
+                "WEEKDAYS" -> context.getString(R.string.frequency_weekdays)
+                "WEEKENDS" -> context.getString(R.string.frequency_weekends)
+                else -> routine.frequency
+            }
 
             // Reminder Time
             if (!routine.reminderTime.isNullOrBlank()) {
@@ -85,6 +90,9 @@ class RoutineAdapter(
             } else {
                 binding.reminderTime.isVisible = false
             }
+
+            // Photo Indicator
+            binding.photoIndicator.isVisible = !routine.photoUri.isNullOrBlank()
 
             // Check-in Button State
             if (isDoneToday) {

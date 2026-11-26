@@ -22,7 +22,7 @@
     <string name="header_voice_prompts">Paula\'s Voice &amp; Guidance</string>
 
     <!-- Companion Screen Strings -->
-    <string name="prompt_default_greeting">\"Good morning! What should we get started on today?\"</string>
+    <string name="prompt_default_greeting">\"Good morning. Ready when you are. Let\'s tackle today\'s routines together, one step at a time.\"</string>
     <string name="prompt_audio_subtitle">Tap quote to browse all • Tap Paula for random</string>
     <string name="dialog_affirmations_title">Paula\'s Voice Affirmations</string>
     <string name="streak_banner_title">5-Day Habit Streak!</string>
@@ -79,6 +79,9 @@
     <string name="error_task_title_required">Title is required</string>
     <string name="label_category">Category</string>
     <string name="category_none">None (General)</string>
+    <string name="category_add_new">+ New Category…</string>
+    <string name="title_new_category">New Category</string>
+    <string name="hint_category_name">Category name</string>
     <string name="label_priority">Priority</string>
     <string name="label_due_date">Due Date</string>
     <string name="hint_due_date">Select a due date (optional)</string>
@@ -116,11 +119,21 @@
     <string name="label_routine_name">Habit Name</string>
     <string name="hint_routine_name">e.g., Morning Walk, Take Vitamins</string>
     <string name="hint_routine_description">Notes or goal (optional)</string>
+    <string name="label_frequency">Frequency</string>
     <string name="error_routine_name_required">Habit name is required</string>
     <string name="label_routine_frequency">Frequency</string>
     <string name="frequency_daily">Daily</string>
     <string name="frequency_weekdays">Weekdays</string>
     <string name="frequency_weekends">Weekends</string>
+    <string name="frequency_custom">Custom…</string>
+    <string name="day_mon">Mon</string>
+    <string name="day_tue">Tue</string>
+    <string name="day_wed">Wed</string>
+    <string name="day_thu">Thu</string>
+    <string name="day_fri">Fri</string>
+    <string name="day_sat">Sat</string>
+    <string name="day_sun">Sun</string>
+    <string name="error_frequency_required">Select at least one day</string>
     <string name="add_routine">Add routine</string>
     <string name="label_reminder_time">Reminder Time</string>
     <string name="hint_set_reminder">Set daily reminder</string>
@@ -140,4 +153,16 @@
     <string name="dialog_delete_profile_title">Delete Profile</string>
     <string name="dialog_delete_profile_message">Delete \"%1$s\" and all of their tasks and habits? This cannot be undone.</string>
     <string name="action_close">Close</string>
+
+    <!-- Celebration Dialog & Preferences -->
+    <string name="pref_video_celebration_title">Video Celebrations</string>
+    <string name="pref_video_celebration_summary">Show Paula\'s celebratory video clip when completing tasks or routines</string>
+    <string name="pref_daily_welcome_title">Daily Welcome Greeting</string>
+    <string name="pref_daily_welcome_summary">Play Paula\'s morning and bedtime greeting when opening the app</string>
+    <string name="celebration_task_title">Task Completed!</string>
+    <string name="celebration_routine_title">Habit Completed!</string>
+    <string name="action_celebration_awesome">Awesome!</string>
+    <string name="label_celebration_prompt">Paula\'s Affirmation</string>
+    <string name="celebration_prompt_auto">Smart Match (Auto)</string>
+    <string name="celebration_prompt_silent">Mute (No Affirmation)</string>
 </resources>

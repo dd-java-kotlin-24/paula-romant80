@@ -145,28 +145,48 @@ class RoutineRepository @Inject constructor(
             return Pair(newStreak, maxOf(bestStreak, newStreak))
         }
 
+        fun parseScheduledDays(frequency: String): Set<DayOfWeek> {
+            val upper = frequency.uppercase().trim()
+            return when {
+                upper == "DAILY" -> DayOfWeek.values().toSet()
+                upper == "WEEKDAYS" -> setOf(
+                    DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY
+                )
+                upper == "WEEKENDS" -> setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
+                else -> {
+                    val days = mutableSetOf<DayOfWeek>()
+                    val tokens = upper.split(",", " ", ";", "/").map { it.trim() }
+                    for (token in tokens) {
+                        when {
+                            token.startsWith("MON") -> days.add(DayOfWeek.MONDAY)
+                            token.startsWith("TUE") -> days.add(DayOfWeek.TUESDAY)
+                            token.startsWith("WED") -> days.add(DayOfWeek.WEDNESDAY)
+                            token.startsWith("THU") -> days.add(DayOfWeek.THURSDAY)
+                            token.startsWith("FRI") -> days.add(DayOfWeek.FRIDAY)
+                            token.startsWith("SAT") -> days.add(DayOfWeek.SATURDAY)
+                            token.startsWith("SUN") -> days.add(DayOfWeek.SUNDAY)
+                        }
+                    }
+                    days
+                }
+            }
+        }
+
         private fun isConsecutiveCompletion(
             frequency: String,
             lastDate: LocalDate,
             currentDate: LocalDate
         ): Boolean {
             if (!lastDate.isBefore(currentDate)) return false
-            var cursor = currentDate.minusDays(1)
-            return when (frequency.uppercase()) {
-                "WEEKDAYS" -> {
-                    while (cursor.dayOfWeek == DayOfWeek.SATURDAY || cursor.dayOfWeek == DayOfWeek.SUNDAY) {
-                        cursor = cursor.minusDays(1)
-                    }
-                    lastDate == cursor || lastDate == currentDate.minusDays(1)
-                }
-                "WEEKENDS" -> {
-                    while (cursor.dayOfWeek != DayOfWeek.SATURDAY && cursor.dayOfWeek != DayOfWeek.SUNDAY) {
-                        cursor = cursor.minusDays(1)
-                    }
-                    lastDate == cursor || lastDate == currentDate.minusDays(1)
-                }
-                else -> lastDate == cursor
+            val scheduled = parseScheduledDays(frequency)
+            if (scheduled.isEmpty()) {
+                return lastDate == currentDate.minusDays(1)
             }
+            var cursor = currentDate.minusDays(1)
+            while (!scheduled.contains(cursor.dayOfWeek) && cursor.isAfter(lastDate)) {
+                cursor = cursor.minusDays(1)
+            }
+            return lastDate == cursor || lastDate == currentDate.minusDays(1)
         }
     }
 

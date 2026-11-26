@@ -13,6 +13,18 @@
             app:defaultValue="true" />
 
         <SwitchPreferenceCompat
+            app:key="video_celebration_enabled"
+            app:title="@string/pref_video_celebration_title"
+            app:summary="@string/pref_video_celebration_summary"
+            app:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            app:key="daily_welcome_enabled"
+            app:title="@string/pref_daily_welcome_title"
+            app:summary="@string/pref_daily_welcome_summary"
+            app:defaultValue="true" />
+
+        <SwitchPreferenceCompat
             app:key="captions_enabled"
             app:title="@string/pref_captions_title"
             app:summary="@string/pref_captions_summary"

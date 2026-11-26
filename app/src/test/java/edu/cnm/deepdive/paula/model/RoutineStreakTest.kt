@@ -175,4 +175,54 @@ class RoutineStreakTest {
         assertEquals(6, newBest)
         assertTrue(newBest > 5)
     }
+
+    @Test
+    fun customFrequency_consecutiveScheduledDays_incrementsStreak() {
+        val monday = LocalDate.of(2026, 11, 23) // Monday
+        val wednesday = LocalDate.of(2026, 11, 25) // Wednesday
+        val routine = Routine(
+            name = "Water Plants",
+            userId = 1L,
+            frequency = "Mon, Wed, Fri",
+            currentStreak = 2,
+            bestStreak = 2,
+            lastCompletedDate = monday
+        )
+
+        val (newStreak, newBest) = RoutineRepository.calculateNextStreak(
+            routine.frequency,
+            routine.currentStreak,
+            routine.bestStreak,
+            routine.lastCompletedDate,
+            wednesday
+        )
+
+        assertEquals(3, newStreak, "Custom habit (Mon, Wed, Fri) must bridge Tuesday")
+        assertEquals(3, newBest)
+    }
+
+    @Test
+    fun customFrequency_missedScheduledDay_resetsStreak() {
+        val lastFriday = LocalDate.of(2026, 11, 20) // Friday
+        val wednesday = LocalDate.of(2026, 11, 25) // Wednesday (missed Monday Nov 23)
+        val routine = Routine(
+            name = "Water Plants",
+            userId = 1L,
+            frequency = "Mon, Wed, Fri",
+            currentStreak = 5,
+            bestStreak = 5,
+            lastCompletedDate = lastFriday
+        )
+
+        val (newStreak, newBest) = RoutineRepository.calculateNextStreak(
+            routine.frequency,
+            routine.currentStreak,
+            routine.bestStreak,
+            routine.lastCompletedDate,
+            wednesday
+        )
+
+        assertEquals(1, newStreak, "Custom habit must reset streak when a scheduled day was skipped")
+        assertEquals(5, newBest)
+    }
 }

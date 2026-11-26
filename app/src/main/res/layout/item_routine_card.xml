@@ -112,6 +112,18 @@
                 tools:text="8:00 AM"
                 tools:visibility="visible" />
 
+            <!-- Photo Proof Indicator -->
+            <ImageView
+                android:id="@+id/photo_indicator"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_camera"
+                app:tint="?attr/colorOutline"
+                android:contentDescription="@string/desc_photo_preview"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
         </LinearLayout>
 
         <!-- Check-in Action Button -->

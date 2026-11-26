@@ -17,16 +17,22 @@ package edu.cnm.deepdive.paula.controller
 
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.RadioButton
-import android.widget.RadioGroup
+import android.widget.Toast
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -45,12 +51,18 @@ import com.google.android.material.timepicker.TimeFormat
 import dagger.hilt.android.AndroidEntryPoint
 import edu.cnm.deepdive.paula.R
 import edu.cnm.deepdive.paula.adapter.RoutineAdapter
+import edu.cnm.deepdive.paula.databinding.DialogRoutineEditBinding
 import edu.cnm.deepdive.paula.databinding.FragmentRoutineBinding
 import edu.cnm.deepdive.paula.model.entity.Routine
+import edu.cnm.deepdive.paula.service.CelebrationManager
 import edu.cnm.deepdive.paula.service.ReminderManager
+import edu.cnm.deepdive.paula.service.RoutineRepository
+import edu.cnm.deepdive.paula.service.VoiceCelebrationHelper
 import edu.cnm.deepdive.paula.viewmodel.RoutineViewModel
 import edu.cnm.deepdive.paula.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
+import java.io.File
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.util.Locale
 
@@ -71,6 +83,27 @@ class RoutineFragment : Fragment() {
 
     private enum class Filter { ALL, PENDING, COMPLETED }
     private var currentFilter: Filter = Filter.ALL
+
+    private var pendingCameraUri: Uri? = null
+    private var activeDialogBinding: DialogRoutineEditBinding? = null
+    private var activeDialogPhotoUri: Uri? = null
+
+    private val takePhotoLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && pendingCameraUri != null) {
+            activeDialogPhotoUri = pendingCameraUri
+            updateDialogPhotoView(activeDialogBinding, activeDialogPhotoUri)
+        }
+    }
+
+    private val pickPhotoLauncher = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            copyToAppStorageAndAttach(uri)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -95,7 +128,11 @@ class RoutineFragment : Fragment() {
                 showEditRoutineDialog(routine)
             },
             onCheckInClick = { routine ->
+                val wasDoneToday = routine.lastCompletedDate == LocalDate.now()
                 routineViewModel.toggleCompletion(routine)
+                if (!wasDoneToday) {
+                    CelebrationManager.celebrateRoutineStreak(this@RoutineFragment, routine, routineAdapter.currentList)
+                }
             }
         )
         binding.routinesRecyclerView.adapter = routineAdapter
@@ -120,6 +157,9 @@ class RoutineFragment : Fragment() {
                 val wasDoneToday = routine.lastCompletedDate == LocalDate.now()
                 routineViewModel.toggleCompletion(routine)
                 routineAdapter.notifyItemChanged(position)
+                if (!wasDoneToday) {
+                    CelebrationManager.celebrateRoutineStreak(this@RoutineFragment, routine, routineAdapter.currentList)
+                }
 
                 val messageRes = if (!wasDoneToday) {
                     R.string.snackbar_routine_checked
@@ -232,62 +272,90 @@ class RoutineFragment : Fragment() {
 
     private fun showRoutineDialog(existing: Routine?) {
         val context = requireContext()
-        val density = resources.displayMetrics.density
+        val dialogBinding = DialogRoutineEditBinding.inflate(layoutInflater)
         var selectedTime: String? = existing?.reminderTime
 
-        val nameInput = TextInputEditText(context).apply {
-            setText(existing?.name.orEmpty())
-            hint = getString(R.string.hint_routine_name)
-            setSingleLine()
-        }
+        activeDialogBinding = dialogBinding
+        activeDialogPhotoUri = existing?.photoUri?.let { Uri.parse(it) }
+        updateDialogPhotoView(dialogBinding, activeDialogPhotoUri)
 
-        val descriptionInput = TextInputEditText(context).apply {
-            setText(existing?.description.orEmpty())
-            hint = getString(R.string.hint_routine_description)
-        }
+        dialogBinding.headerTitle.text = existing?.name ?: getString(R.string.dialog_new_routine_title)
+        dialogBinding.nameInput.setText(existing?.name.orEmpty())
+        dialogBinding.descriptionInput.setText(existing?.description.orEmpty())
 
-        val frequencyOptions = listOf(
-            "DAILY" to getString(R.string.frequency_daily),
-            "WEEKDAYS" to getString(R.string.frequency_weekdays),
-            "WEEKENDS" to getString(R.string.frequency_weekends)
+        val dayChips = listOf(
+            dialogBinding.chipDayMon to "Mon",
+            dialogBinding.chipDayTue to "Tue",
+            dialogBinding.chipDayWed to "Wed",
+            dialogBinding.chipDayThu to "Thu",
+            dialogBinding.chipDayFri to "Fri",
+            dialogBinding.chipDaySat to "Sat",
+            dialogBinding.chipDaySun to "Sun"
         )
-        val frequencyGroup = RadioGroup(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            val currentFreq = existing?.frequency ?: "DAILY"
-            frequencyOptions.forEachIndexed { index, (code, label) ->
-                val radio = RadioButton(context).apply {
-                    id = View.generateViewId()
-                    text = label
-                    tag = code
-                    setPadding(0, 0, (12 * density).toInt(), 0)
-                }
-                addView(radio)
-                if (code == currentFreq || (index == 0 && frequencyOptions.none { it.first == currentFreq })) {
-                    check(radio.id)
-                }
+
+        fun updateCustomDaysVisibility(isCustom: Boolean) {
+            dialogBinding.customDaysGroup.isVisible = isCustom
+        }
+
+        val existingFreq = existing?.frequency.orEmpty().uppercase()
+        when (existingFreq) {
+            "WEEKDAYS" -> {
+                dialogBinding.chipFrequencyWeekdays.isChecked = true
+                updateCustomDaysVisibility(false)
+            }
+            "WEEKENDS" -> {
+                dialogBinding.chipFrequencyWeekends.isChecked = true
+                updateCustomDaysVisibility(false)
+            }
+            "DAILY", "" -> {
+                dialogBinding.chipFrequencyDaily.isChecked = true
+                updateCustomDaysVisibility(false)
+            }
+            else -> {
+                dialogBinding.chipFrequencyCustom.isChecked = true
+                updateCustomDaysVisibility(true)
+                val scheduledDays = RoutineRepository.parseScheduledDays(existingFreq)
+                dialogBinding.chipDayMon.isChecked = scheduledDays.contains(DayOfWeek.MONDAY)
+                dialogBinding.chipDayTue.isChecked = scheduledDays.contains(DayOfWeek.TUESDAY)
+                dialogBinding.chipDayWed.isChecked = scheduledDays.contains(DayOfWeek.WEDNESDAY)
+                dialogBinding.chipDayThu.isChecked = scheduledDays.contains(DayOfWeek.THURSDAY)
+                dialogBinding.chipDayFri.isChecked = scheduledDays.contains(DayOfWeek.FRIDAY)
+                dialogBinding.chipDaySat.isChecked = scheduledDays.contains(DayOfWeek.SATURDAY)
+                dialogBinding.chipDaySun.isChecked = scheduledDays.contains(DayOfWeek.SUNDAY)
             }
         }
 
-        val timeButton = MaterialButton(context, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
-            text = if (!selectedTime.isNullOrBlank()) {
-                getString(R.string.label_reminder_time) + ": " + selectedTime
-            } else {
-                getString(R.string.hint_set_reminder)
-            }
-            setIconResource(R.drawable.ic_calendar_today)
-        }
-
-        val clearTimeButton = MaterialButton(context, null, android.R.attr.borderlessButtonStyle).apply {
-            text = getString(R.string.action_clear_reminder)
-            isVisible = selectedTime != null
-            setOnClickListener {
-                selectedTime = null
-                timeButton.text = getString(R.string.hint_set_reminder)
-                isVisible = false
+        dialogBinding.frequencyChipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
+            val isCustom = checkedIds.contains(R.id.chip_frequency_custom)
+            updateCustomDaysVisibility(isCustom)
+            if (isCustom && dayChips.none { it.first.isChecked }) {
+                dialogBinding.chipDayMon.isChecked = true
+                dialogBinding.chipDayWed.isChecked = true
+                dialogBinding.chipDayFri.isChecked = true
             }
         }
 
-        timeButton.setOnClickListener {
+        // Photo action bindings
+        dialogBinding.btnTakePhoto.setOnClickListener { launchCamera() }
+        dialogBinding.btnRetakePhoto.setOnClickListener { launchCamera() }
+        dialogBinding.btnChoosePhoto.setOnClickListener {
+            pickPhotoLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        }
+        dialogBinding.btnRemovePhoto.setOnClickListener {
+            activeDialogPhotoUri = null
+            updateDialogPhotoView(dialogBinding, null)
+        }
+        dialogBinding.photoPreview.setOnClickListener {
+            activeDialogPhotoUri?.let { showFullScreenPhoto(it) }
+        }
+
+        if (!selectedTime.isNullOrBlank()) {
+            dialogBinding.reminderTimeInput.setText(selectedTime)
+        }
+
+        val openTimePicker = View.OnClickListener {
             val initialHour = selectedTime?.split(":")?.getOrNull(0)?.toIntOrNull() ?: 8
             val initialMinute = selectedTime?.split(":")?.getOrNull(1)?.toIntOrNull() ?: 0
             val picker = MaterialTimePicker.Builder()
@@ -300,57 +368,20 @@ class RoutineFragment : Fragment() {
             picker.addOnPositiveButtonClickListener {
                 val formatted = String.format(Locale.getDefault(), "%02d:%02d", picker.hour, picker.minute)
                 selectedTime = formatted
-                timeButton.text = getString(R.string.label_reminder_time) + ": " + formatted
-                clearTimeButton.isVisible = true
+                dialogBinding.reminderTimeInput.setText(formatted)
             }
             picker.show(parentFragmentManager, "routine_time_picker")
         }
 
-        val container = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            val paddingH = (24 * density).toInt()
-            val paddingV = (8 * density).toInt()
-            setPadding(paddingH, paddingV, paddingH, paddingV)
-            addView(nameInput)
-            addView(descriptionInput)
-            addView(frequencyGroup)
-            addView(timeButton)
-            addView(clearTimeButton)
+        dialogBinding.reminderTimeInput.setOnClickListener(openTimePicker)
+        dialogBinding.reminderTimeLayout.setStartIconOnClickListener(openTimePicker)
+        dialogBinding.reminderTimeLayout.setEndIconOnClickListener {
+            selectedTime = null
+            dialogBinding.reminderTimeInput.text = null
         }
 
         val builder = MaterialAlertDialogBuilder(context)
-            .setTitle(existing?.name ?: getString(R.string.dialog_new_routine_title))
-            .setView(container)
-            .setNegativeButton(R.string.action_cancel, null)
-            .setPositiveButton(R.string.action_save) { _, _ ->
-                val name = nameInput.text?.toString()?.trim().orEmpty()
-                if (name.isNotBlank()) {
-                    val description = descriptionInput.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }
-                    val checkedRadio = frequencyGroup.findViewById<RadioButton>(frequencyGroup.checkedRadioButtonId)
-                    val frequency = (checkedRadio?.tag as? String) ?: "DAILY"
-                    val userId = userViewModel.currentUser.value?.id ?: 1L
-                    val routineToSave = existing?.copy(
-                        name = name,
-                        description = description,
-                        frequency = frequency,
-                        reminderTime = selectedTime
-                    ) ?: Routine(
-                        userId = userId,
-                        name = name,
-                        description = description,
-                        frequency = frequency,
-                        reminderTime = selectedTime
-                    )
-                    val appContext = context.applicationContext
-                    routineViewModel.save(routineToSave) { saved ->
-                        if (selectedTime != null) {
-                            ReminderManager.schedule(appContext, saved)
-                        } else if (existing != null) {
-                            ReminderManager.cancel(appContext, saved.id)
-                        }
-                    }
-                }
-            }
+            .setView(dialogBinding.root)
 
         if (existing != null) {
             builder.setNeutralButton(R.string.action_delete) { _, _ ->
@@ -359,11 +390,181 @@ class RoutineFragment : Fragment() {
             }
         }
 
-        builder.show()
+        val dialog = builder.create()
+        dialog.setOnDismissListener {
+            activeDialogBinding = null
+        }
+
+        dialogBinding.btnCancel.setOnClickListener { dialog.dismiss() }
+        dialogBinding.btnSave.setOnClickListener {
+            val name = dialogBinding.nameInput.text?.toString()?.trim().orEmpty()
+            if (name.isBlank()) {
+                dialogBinding.nameLayout.error = getString(R.string.error_task_title_required)
+                return@setOnClickListener
+            }
+            dialogBinding.nameLayout.error = null
+            val description = dialogBinding.descriptionInput.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }
+            val frequency = when (dialogBinding.frequencyChipGroup.checkedChipId) {
+                R.id.chip_frequency_weekdays -> "WEEKDAYS"
+                R.id.chip_frequency_weekends -> "WEEKENDS"
+                R.id.chip_frequency_custom -> {
+                    val selectedDays = dayChips.filter { it.first.isChecked }.map { it.second }
+                    if (selectedDays.isEmpty()) {
+                        Snackbar.make(dialogBinding.root, R.string.error_frequency_required, Snackbar.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                    selectedDays.joinToString(", ")
+                }
+                else -> "DAILY"
+            }
+            val userId = userViewModel.currentUser.value?.id ?: 1L
+            val routineToSave = existing?.copy(
+                name = name,
+                description = description,
+                frequency = frequency,
+                reminderTime = selectedTime,
+                photoUri = activeDialogPhotoUri?.toString()
+            ) ?: Routine(
+                userId = userId,
+                name = name,
+                description = description,
+                frequency = frequency,
+                reminderTime = selectedTime,
+                photoUri = activeDialogPhotoUri?.toString()
+            )
+            val appContext = context.applicationContext
+            routineViewModel.save(routineToSave) { saved ->
+                if (selectedTime != null) {
+                    ReminderManager.schedule(appContext, saved)
+                } else if (existing != null) {
+                    ReminderManager.cancel(appContext, saved.id)
+                }
+            }
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun updateDialogPhotoView(dialogBinding: DialogRoutineEditBinding?, uri: Uri?) {
+        if (dialogBinding == null) return
+        if (uri == null) {
+            dialogBinding.photoPreview.setImageDrawable(null)
+            dialogBinding.photoPreviewCard.isVisible = false
+            dialogBinding.photoActionContainer.isVisible = true
+        } else {
+            val bitmap = loadScaledBitmap(uri)
+            if (bitmap != null) {
+                dialogBinding.photoPreview.setImageBitmap(bitmap)
+            } else {
+                dialogBinding.photoPreview.setImageURI(uri)
+            }
+            dialogBinding.photoPreviewCard.isVisible = true
+            dialogBinding.photoActionContainer.isVisible = false
+        }
+    }
+
+    private fun launchCamera() {
+        try {
+            val context = requireContext()
+            val picturesDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES) ?: context.filesDir
+            val photoFile = File.createTempFile("routine_${System.currentTimeMillis()}_", ".jpg", picturesDir)
+            val authority = "${context.packageName}.fileprovider"
+            val uri = FileProvider.getUriForFile(context, authority, photoFile)
+            pendingCameraUri = uri
+            takePhotoLauncher.launch(uri)
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), R.string.error_photo_attach, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun copyToAppStorageAndAttach(sourceUri: Uri) {
+        try {
+            val context = requireContext()
+            val picturesDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES) ?: context.filesDir
+            val targetFile = File(picturesDir, "routine_photo_${System.currentTimeMillis()}.jpg")
+            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                targetFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            val authority = "${context.packageName}.fileprovider"
+            val permanentUri = FileProvider.getUriForFile(context, authority, targetFile)
+            activeDialogPhotoUri = permanentUri
+            updateDialogPhotoView(activeDialogBinding, permanentUri)
+        } catch (_: Exception) {
+            Toast.makeText(requireContext(), R.string.error_photo_attach, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showFullScreenPhoto(uri: Uri) {
+        val imageView = android.widget.ImageView(requireContext()).apply {
+            adjustViewBounds = true
+            scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+            val bitmap = loadScaledBitmap(uri, 1920, 1920)
+            if (bitmap != null) {
+                setImageBitmap(bitmap)
+            } else {
+                setImageURI(uri)
+            }
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setView(imageView)
+            .setPositiveButton(R.string.action_close, null)
+            .show()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun loadScaledBitmap(uri: Uri, maxWidth: Int = 1080, maxHeight: Int = 1080): Bitmap? {
+        val context = context ?: return null
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(context.contentResolver, uri)
+                ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                    val size = info.size
+                    val widthRatio = size.width.toFloat() / maxWidth
+                    val heightRatio = size.height.toFloat() / maxHeight
+                    val maxRatio = maxOf(widthRatio, heightRatio)
+                    if (maxRatio > 1.0f) {
+                        val targetWidth = (size.width / maxRatio).toInt().coerceAtLeast(1)
+                        val targetHeight = (size.height / maxRatio).toInt().coerceAtLeast(1)
+                        decoder.setTargetSize(targetWidth, targetHeight)
+                    }
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                }
+            } else {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeStream(stream, null, options)
+                    var inSampleSize = 1
+                    if (options.outHeight > maxHeight || options.outWidth > maxWidth) {
+                        val halfHeight = options.outHeight / 2
+                        val halfWidth = options.outWidth / 2
+                        while ((halfHeight / inSampleSize) >= maxHeight && (halfWidth / inSampleSize) >= maxWidth) {
+                            inSampleSize *= 2
+                        }
+                    }
+                    val decodeOptions = BitmapFactory.Options().apply {
+                        this.inSampleSize = inSampleSize
+                    }
+                    context.contentResolver.openInputStream(uri)?.use { secondStream ->
+                        BitmapFactory.decodeStream(secondStream, null, decodeOptions)
+                    }
+                }
+            }
+        } catch (_: Throwable) {
+            null
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        VoiceCelebrationHelper.stop()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        VoiceCelebrationHelper.stop()
         _binding = null
     }
 
